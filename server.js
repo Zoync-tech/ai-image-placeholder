@@ -654,12 +654,83 @@ app.post('/api/debug-verification', async (req, res) => {
       email: email,
       verification: verification,
       in_memory_verifications: Array.from(emailVerifications.entries()),
-      supabase_configured: isSupabaseConfigured
+      supabase_configured: isSupabaseConfigured,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('❌ Debug verification error:', error);
     res.status(500).json({ 
       error: 'Debug failed',
+      details: error.message 
+    });
+  }
+});
+
+// Simple endpoint to list all pending verifications
+app.get('/api/debug-verifications', (req, res) => {
+  try {
+    const inMemoryVerifications = Array.from(emailVerifications.entries());
+    
+    res.json({
+      in_memory_verifications: inMemoryVerifications,
+      supabase_configured: isSupabaseConfigured,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Debug verifications error:', error);
+    res.status(500).json({ 
+      error: 'Debug failed',
+      details: error.message 
+    });
+  }
+});
+
+// Test verification flow endpoint
+app.post('/api/test-verification-flow', async (req, res) => {
+  const { email, name } = req.body;
+  
+  if (!email || !name) {
+    return res.status(400).json({ error: 'Email and name are required' });
+  }
+
+  try {
+    console.log(`🧪 Testing verification flow for email: ${email}`);
+    
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+    console.log(`🔐 Generated test verification code: ${verificationCode}`);
+    
+    // Store verification code
+    const verificationData = {
+      code: verificationCode,
+      name: name,
+      created_at: new Date().toISOString()
+    };
+    
+    await SupabaseService.storeEmailVerification(email, verificationData);
+    console.log(`💾 Stored test verification code`);
+    
+    // Immediately try to retrieve it
+    const storedVerification = await SupabaseService.getEmailVerification(email);
+    console.log(`🔍 Retrieved test verification:`, storedVerification);
+    
+    // Try to verify it
+    const verificationResult = await verifyEmailCode(email, verificationCode);
+    console.log(`✅ Test verification result:`, verificationResult);
+    
+    res.json({
+      email: email,
+      generated_code: verificationCode,
+      stored_verification: storedVerification,
+      verification_result: verificationResult,
+      in_memory_verifications: Array.from(emailVerifications.entries()),
+      supabase_configured: isSupabaseConfigured,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Test verification flow error:', error);
+    res.status(500).json({ 
+      error: 'Test failed',
       details: error.message 
     });
   }
@@ -762,12 +833,21 @@ app.post('/api/auth/signup', async (req, res) => {
     console.log(`🔐 Generated verification code for ${email}: ${verificationCode}`);
     
     // Store verification code
-    await SupabaseService.storeEmailVerification(email, {
+    const verificationData = {
       code: verificationCode,
       name: name,
       created_at: new Date().toISOString()
-    });
+    };
+    
+    await SupabaseService.storeEmailVerification(email, verificationData);
     console.log(`💾 Stored verification code for ${email}`);
+    
+    // Immediately verify it was stored correctly
+    const storedVerification = await SupabaseService.getEmailVerification(email);
+    console.log(`✅ Verification storage check for ${email}:`, storedVerification ? 'SUCCESS' : 'FAILED');
+    if (storedVerification) {
+      console.log(`📋 Stored code: ${storedVerification.code}, Expected: ${verificationCode}`);
+    }
     
     // Send verification email
     const emailSent = await sendVerificationEmail(email, verificationCode);
