@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const axios = require('axios');
 const sharp = require('sharp');
@@ -329,6 +332,53 @@ class SupabaseService {
     return data;
   }
 
+  static async incrementUserGenerations(userId) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const user = users.get(userId);
+      if (user) {
+        user.total_generations = (user.total_generations || 0) + 1;
+        users.set(userId, user);
+      }
+      return user;
+    }
+
+    try {
+      // First get current user data
+      const { data: currentUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching user for generation increment:', fetchError);
+        return null;
+      }
+
+      // Update with incremented total_generations
+      const { data, error } = await supabase
+        .from('users')
+        .update({ 
+          total_generations: (currentUser.total_generations || 0) + 1
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase incrementUserGenerations error:', error);
+        return null;
+      }
+
+      console.log(`✅ Incremented total_generations for user: ${userId}`);
+      return data;
+    } catch (error) {
+      console.error('Supabase incrementUserGenerations exception:', error);
+      return null;
+    }
+  }
+
   // API Key Management
   static async createApiKey(apiKeyData) {
     if (!isSupabaseConfigured) {
@@ -393,18 +443,41 @@ class SupabaseService {
       return keyData;
     }
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .update({ 
-        total_requests: supabase.raw('total_requests + 1'),
-        last_used_at: new Date().toISOString()
-      })
-      .eq('api_key', apiKey)
-      .select()
-      .single();
+    try {
+      // First get current API key data
+      const { data: currentKey, error: fetchError } = await supabase
+        .from('api_keys')
+        .select('*')
+        .eq('api_key', apiKey)
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (fetchError) {
+        console.error('Error fetching API key for update:', fetchError);
+        return null;
+      }
+
+      // Update with incremented total_requests
+      const { data, error } = await supabase
+        .from('api_keys')
+        .update({ 
+          total_requests: (currentKey.total_requests || 0) + 1,
+          last_used_at: new Date().toISOString()
+        })
+        .eq('api_key', apiKey)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase updateApiKeyUsage error:', error);
+        return null;
+      }
+
+      console.log(`✅ Updated API key stats: ${apiKey}`);
+      return data;
+    } catch (error) {
+      console.error('Supabase updateApiKeyUsage exception:', error);
+      return null;
+    }
   }
 
   // Session Management
@@ -1646,6 +1719,7 @@ app.get('/:dimensions.jpg', async (req, res) => {
     try {
       const remainingCredits = await deductCredits(keyData.user_id, 1);
       await updateApiKeyStats(api_key);
+      await SupabaseService.incrementUserGenerations(keyData.user_id);
       
       console.log(`✅ Image generated successfully for user ${keyData.user_id}. Credits remaining: ${remainingCredits}`);
     } catch (creditError) {
