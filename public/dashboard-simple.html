@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Placeholder - API Key Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .api-key-display {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .user-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .user-info h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .credits {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .examples {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .examples code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            display: block;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .demo-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .demo-section h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 AI Image Placeholder</h1>
+            <p>API Key Manager & Usage Dashboard</p>
+        </div>
+
+        <div class="content">
+            <!-- Demo API Key Section -->
+            <div class="demo-section">
+                <h3>🚀 Quick Start - Demo API Key</h3>
+                <p>Use this demo API key to test the service immediately:</p>
+                <div class="api-key-display" id="demoApiKey">
+                    Loading demo API key...
+                </div>
+                <button class="copy-btn" onclick="copyDemoApiKey()">Copy Demo API Key</button>
+                <div class="examples">
+                    <strong>Example URLs:</strong>
+                    <code id="demoExample1">https://your-domain.com/600x400.jpg?api_key=DEMO_KEY&text=cat+flying</code>
+                    <code id="demoExample2">https://your-domain.com/512x512.jpg?api_key=DEMO_KEY&text=panda+dancing</code>
+                </div>
+            </div>
+
+            <!-- Create New API Key Section -->
+            <div class="section">
+                <h2>🔑 Create New API Key</h2>
+                <p>Create a new API key to get 5 free image generations.</p>
+                
+                <div class="form-group">
+                    <label for="apiKeyName">API Key Name (optional)</label>
+                    <input type="text" id="apiKeyName" placeholder="My API Key">
+                </div>
+                
+                <button class="btn" onclick="createApiKey()">Create API Key</button>
+                
+                <div class="loading" id="createLoading">
+                    <div class="spinner"></div>
+                    <p>Creating API key...</p>
+                </div>
+            </div>
+
+            <!-- API Key Info Section -->
+            <div class="section">
+                <h2>📊 Check API Key Info</h2>
+                <p>Enter your API key to check credits and usage.</p>
+                
+                <div class="form-group">
+                    <label for="checkApiKey">Your API Key</label>
+                    <input type="text" id="checkApiKey" placeholder="ai_xxxxxxxxxxxxxxxx">
+                </div>
+                
+                <button class="btn" onclick="checkApiKey()">Check Info</button>
+                
+                <div class="loading" id="checkLoading">
+                    <div class="spinner"></div>
+                    <p>Checking API key...</p>
+                </div>
+                
+                <div id="apiKeyInfo" style="display: none;">
+                    <div class="user-info">
+                        <h3>API Key Information</h3>
+                        <p><strong>API Key:</strong> <span id="infoApiKey"></span></p>
+                        <p><strong>Credits Remaining:</strong> <span id="infoCredits" class="credits"></span></p>
+                        <p><strong>Total Generations:</strong> <span id="infoGenerations"></span></p>
+                        <p><strong>API Key Name:</strong> <span id="infoName"></span></p>
+                        <p><strong>Total Requests:</strong> <span id="infoRequests"></span></p>
+                        <p><strong>Last Used:</strong> <span id="infoLastUsed"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Examples -->
+            <div class="section">
+                <h2>🎮 Usage Examples</h2>
+                
+                <h3>VRChat Usage:</h3>
+                <div class="examples">
+                    <code>https://your-domain.com/512x512.jpg?api_key=YOUR_KEY&text=anime+character</code>
+                    <code>https://your-domain.com/1024x1024.jpg?api_key=YOUR_KEY&text=fantasy+landscape</code>
+                    <code>https://your-domain.com/256x256.jpg?api_key=YOUR_KEY&text=cute+robot</code>
+                </div>
+
+                <h3>General Usage:</h3>
+                <div class="examples">
+                    <code>https://your-domain.com/600x400.jpg?api_key=YOUR_KEY&text=abstract+art</code>
+                    <code>https://your-domain.com/800x600.jpg?api_key=YOUR_KEY&text=cyberpunk+city</code>
+                    <code>https://your-domain.com/1200x800.jpg?api_key=YOUR_KEY&text=magical+forest</code>
+                </div>
+
+                <h3>Custom Dimensions:</h3>
+                <div class="examples">
+                    <code>https://your-domain.com/1920x1080.jpg?api_key=YOUR_KEY&text=banner+design</code>
+                    <code>https://your-domain.com/400x300.jpg?api_key=YOUR_KEY&text=thumbnail+image</code>
+                </div>
+            </div>
+
+            <!-- Business Model -->
+            <div class="section">
+                <h2>💰 Business Model</h2>
+                <p><strong>Free Tier:</strong> 5 image generations per API key</p>
+                <p><strong>Future Plans:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Paid plans with more credits</li>
+                    <li>Bulk generation packages</li>
+                    <li>Priority processing</li>
+                    <li>Custom model training</li>
+                    <li>API rate limiting and monitoring</li>
+                </ul>
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let demoApiKey = '';
+
+        // Load demo API key on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadDemoApiKey();
+        });
+
+        async function loadDemoApiKey() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                console.log('Server response:', data);
+                
+                // Get the demo API key from the server
+                demoApiKey = data.demo_api_key || 'ai_demo123456789';
+                document.getElementById('demoApiKey').textContent = demoApiKey;
+                
+                // Update examples
+                const baseUrl = window.location.origin;
+                document.getElementById('demoExample1').textContent = 
+                    `${baseUrl}/600x400.jpg?api_key=${demoApiKey}&text=cat+flying`;
+                document.getElementById('demoExample2').textContent = 
+                    `${baseUrl}/512x512.jpg?api_key=${demoApiKey}&text=panda+dancing`;
+            } catch (error) {
+                console.error('Error loading demo API key:', error);
+                document.getElementById('demoApiKey').textContent = 'Error loading demo key';
+            }
+        }
+
+        async function createApiKey() {
+            const name = document.getElementById('apiKeyName').value || 'New API Key';
+            
+            showLoading('createLoading');
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/create-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(`API key created successfully! You have ${data.credits} free credits.`);
+                    
+                    // Display the new API key
+                    const newKeyHtml = `
+                        <div class="api-key-display">
+                            <strong>New API Key:</strong><br>
+                            ${data.api_key}
+                        </div>
+                    `;
+                    
+                    document.getElementById('createLoading').insertAdjacentHTML('afterend', newKeyHtml);
+                    
+                    // Clear the input
+                    document.getElementById('apiKeyName').value = '';
+                } else {
+                    const error = await response.json();
+                    showError('errorMessage', error.error || 'Failed to create API key');
+                }
+            } catch (error) {
+                showError('errorMessage', 'Failed to create API key');
+            }
+            
+            hideLoading('createLoading');
+        }
+
+        async function checkApiKey() {
+            const apiKey = document.getElementById('checkApiKey').value.trim();
+            
+            if (!apiKey) {
+                showError('errorMessage', 'Please enter an API key');
+                return;
+            }
+            
+            showLoading('checkLoading');
+            hideMessages();
+            
+            try {
+                const response = await fetch(`/api/info?api_key=${encodeURIComponent(apiKey)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('infoApiKey').textContent = data.api_key;
+                    document.getElementById('infoCredits').textContent = data.credits_remaining;
+                    document.getElementById('infoGenerations').textContent = data.total_generations;
+                    document.getElementById('infoName').textContent = data.api_key_name;
+                    document.getElementById('infoRequests').textContent = data.api_key_requests;
+                    document.getElementById('infoLastUsed').textContent = data.last_used || 'Never';
+                    
+                    document.getElementById('apiKeyInfo').style.display = 'block';
+                } else {
+                    const error = await response.json();
+                    showError('errorMessage', error.error || 'Failed to check API key');
+                }
+            } catch (error) {
+                showError('errorMessage', 'Failed to check API key');
+            }
+            
+            hideLoading('checkLoading');
+        }
+
+        function copyDemoApiKey() {
+            navigator.clipboard.writeText(demoApiKey);
+            showSuccess('Demo API key copied to clipboard!');
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const element = document.getElementById('successMessage');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

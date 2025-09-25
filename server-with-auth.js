@@ -177,19 +177,13 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     mode: 'with-auth',
     total_users: users.size,
-    total_api_keys: apiKeys.size,
-    demo_api_key: defaultApiKey
+    total_api_keys: apiKeys.size
   });
 });
 
 // Serve the demo page at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Serve dashboard
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard-simple.html'));
 });
 
 // API Routes for user management
