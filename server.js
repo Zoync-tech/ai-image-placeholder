@@ -717,6 +717,111 @@ class SupabaseService {
       return userGenerations;
     }
   }
+
+  // Supabase Storage Functions
+  static async uploadImageToStorage(imageBuffer, fileName, userId) {
+    if (!isSupabaseConfigured) {
+      console.log(`📁 Image upload fallback - would save: ${fileName}`);
+      return null;
+    }
+
+    try {
+      // Create a unique file path: images/userId/filename
+      const filePath = `images/${userId}/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('generated-images')
+        .upload(filePath, imageBuffer, {
+          contentType: 'image/jpeg',
+          cacheControl: '3600',
+          upsert: false // Don't overwrite existing files
+        });
+
+      if (error) {
+        console.error('Supabase Storage upload error:', error);
+        return null;
+      }
+
+      console.log(`✅ Image uploaded to Supabase Storage: ${filePath}`);
+      return data;
+    } catch (error) {
+      console.error('Supabase Storage upload exception:', error);
+      return null;
+    }
+  }
+
+  static async getImageFromStorage(filePath) {
+    if (!isSupabaseConfigured) {
+      console.log(`📁 Image retrieval fallback for: ${filePath}`);
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('generated-images')
+        .download(filePath);
+
+      if (error) {
+        console.error('Supabase Storage download error:', error);
+        return null;
+      }
+
+      console.log(`✅ Image retrieved from Supabase Storage: ${filePath}`);
+      return data;
+    } catch (error) {
+      console.error('Supabase Storage download exception:', error);
+      return null;
+    }
+  }
+
+  static async getPublicImageUrl(filePath) {
+    if (!isSupabaseConfigured) {
+      return null;
+    }
+
+    try {
+      const { data } = supabase.storage
+        .from('generated-images')
+        .getPublicUrl(filePath);
+
+      console.log(`🔗 Generated public URL for: ${filePath}`);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Supabase Storage public URL exception:', error);
+      return null;
+    }
+  }
+
+  static async updateImageGenerationWithStorage(generationId, storagePath, publicUrl) {
+    if (!isSupabaseConfigured) {
+      console.log(`📁 Would update generation ${generationId} with storage path: ${storagePath}`);
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('image_generations')
+        .update({
+          storage_path: storagePath,
+          public_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', generationId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase updateImageGenerationWithStorage error:', error);
+        return null;
+      }
+
+      console.log(`✅ Updated image generation with storage info: ${generationId}`);
+      return data;
+    } catch (error) {
+      console.error('Supabase updateImageGenerationWithStorage exception:', error);
+      return null;
+    }
+  }
 }
 
 // Send verification email using Resend
@@ -1701,8 +1806,9 @@ app.get('/:dimensions.jpg', async (req, res) => {
     }
 
     // Save image generation record
+    let generationRecord = null;
     try {
-      await SupabaseService.saveImageGeneration({
+      generationRecord = await SupabaseService.saveImageGeneration({
         user_id: keyData.user_id,
         api_key_id: keyData.id,
         prompt: prompt,
@@ -1713,6 +1819,24 @@ app.get('/:dimensions.jpg', async (req, res) => {
       console.log(`✅ Saved image generation record for user ${keyData.user_id}`);
     } catch (saveError) {
       console.error('Error saving image generation:', saveError);
+    }
+
+    // Upload image to Supabase Storage
+    if (generationRecord && generationRecord.id) {
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `${dimensions}_${timestamp}.jpg`;
+        const storageResult = await SupabaseService.uploadImageToStorage(imageBuffer, fileName, keyData.user_id);
+        
+        if (storageResult) {
+          const publicUrl = await SupabaseService.getPublicImageUrl(storageResult.path);
+          await SupabaseService.updateImageGenerationWithStorage(generationRecord.id, storageResult.path, publicUrl);
+          console.log(`✅ Image uploaded to Supabase Storage: ${storageResult.path}`);
+        }
+      } catch (storageError) {
+        console.error('Error uploading image to storage:', storageError);
+        // Don't fail the request if storage upload fails
+      }
     }
 
     // Deduct credit after successful generation

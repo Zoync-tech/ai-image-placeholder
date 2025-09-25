@@ -283,6 +283,13 @@
             word-break: break-all;
             margin-top: 10px;
         }
+
+        .storage-info {
+            font-size: 12px;
+            color: #28a745;
+            margin-top: 5px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -601,8 +608,15 @@
                 const generationItem = document.createElement('div');
                 generationItem.className = 'generation-item';
                 
-                // Create the image URL
-                const imageUrl = `${baseUrl}/${generation.dimensions}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(generation.prompt)}`;
+                // Use Supabase Storage URL if available, otherwise fallback to API URL
+                let imageUrl, displayUrl;
+                if (generation.public_url) {
+                    imageUrl = generation.public_url;
+                    displayUrl = generation.public_url;
+                } else {
+                    imageUrl = `${baseUrl}/${generation.dimensions}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(generation.prompt)}`;
+                    displayUrl = imageUrl;
+                }
                 
                 generationItem.innerHTML = `
                     <img src="${imageUrl}" alt="${generation.prompt}" class="generation-image" onerror="this.style.display='none'">
@@ -610,7 +624,8 @@
                         <div class="generation-prompt">${generation.prompt}</div>
                         <div class="generation-details">Dimensions: ${generation.dimensions}</div>
                         <div class="generation-date">Generated: ${new Date(generation.created_at).toLocaleString()}</div>
-                        <div class="generation-url">${imageUrl}</div>
+                        <div class="generation-url">${displayUrl}</div>
+                        ${generation.storage_path ? '<div class="storage-info">📁 Stored in Supabase Storage</div>' : '<div class="storage-info">🔄 Generated on-demand</div>'}
                     </div>
                 `;
                 
