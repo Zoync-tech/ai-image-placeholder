@@ -83,7 +83,12 @@ fal.config({
 // Generate image using FAL AI Nano Banana (Gemini-powered)
 async function generateImageWithFAL(prompt, width = 600, height = 400) {
   try {
-    console.log(`Generating image with FAL AI: "${prompt}"`);
+    console.log(`🤖 Generating image with FAL AI: "${prompt}"`);
+    console.log(`🔧 FAL_KEY configured: ${!!process.env.FAL_KEY}`);
+    
+    if (!process.env.FAL_KEY) {
+      throw new Error('FAL_KEY environment variable is not set');
+    }
     
     const result = await fal.subscribe("fal-ai/nano-banana", {
       input: {
@@ -95,44 +100,50 @@ async function generateImageWithFAL(prompt, width = 600, height = 400) {
       logs: true,
       onQueueUpdate: (update) => {
         if (update.status === "IN_PROGRESS") {
-          console.log('FAL AI Status:', update.logs?.map((log) => log.message).join(', '));
+          console.log('🤖 FAL AI Status:', update.logs?.map((log) => log.message).join(', '));
         }
       },
     });
 
-    console.log('FAL AI Result:', result.data);
+    console.log('🤖 FAL AI Result:', result);
     
     if (result.data && result.data.images && result.data.images[0] && result.data.images[0].url) {
+      console.log(`📥 Downloading image from URL: ${result.data.images[0].url}`);
       const imageResponse = await axios.get(result.data.images[0].url, {
         responseType: 'arraybuffer',
         timeout: 30000
       });
       
-      return imageResponse.data;
+      console.log(`✅ Image downloaded successfully, size: ${imageResponse.data.length} bytes`);
+      return Buffer.from(imageResponse.data);
     } else {
+      console.error('❌ No image URL returned from FAL AI:', result);
       throw new Error('No image URL returned from FAL AI');
     }
   } catch (error) {
-    console.error('FAL AI Error:', error.message);
-    throw new Error('Failed to generate image with FAL AI');
+    console.error('❌ FAL AI Error:', error.message);
+    console.error('❌ FAL AI Error details:', error);
+    throw new Error(`Failed to generate image with FAL AI: ${error.message}`);
   }
 }
 
 // Main image generation function
 async function generateImage(prompt, width = 600, height = 400) {
   try {
-    console.log(`Generating image with FAL AI Nano Banana: "${prompt}"`);
+    console.log(`🎨 Generating image with FAL AI Nano Banana: "${prompt}"`);
     const imageBuffer = await generateImageWithFAL(prompt, width, height);
     
     if (imageBuffer && imageBuffer.length > 0) {
-      console.log('✅ Image generated successfully');
+      console.log(`✅ Image generated successfully, size: ${imageBuffer.length} bytes`);
       return imageBuffer;
     } else {
+      console.log(`❌ Empty image buffer returned`);
       throw new Error('Empty image buffer returned');
     }
   } catch (error) {
-    console.error('Image generation failed:', error.message);
-    throw new Error('Failed to generate image');
+    console.error('❌ Image generation failed:', error.message);
+    console.error('❌ Full error:', error);
+    throw new Error(`Failed to generate image: ${error.message}`);
   }
 }
 
@@ -1337,10 +1348,12 @@ app.get('/:dimensions.jpg', async (req, res) => {
     const { dimensions } = req.params;
     const { text, api_key } = req.query;
     
-    console.log(`Image request: ${dimensions}.jpg, text: "${text}", api_key: ${api_key ? 'provided' : 'missing'}`);
+    console.log(`🎨 Image request: ${dimensions}.jpg, text: "${text}", api_key: ${api_key ? 'provided' : 'missing'}`);
+    console.log(`🔧 FAL_KEY configured: ${!!process.env.FAL_KEY}`);
     
     // Validate API key
     if (!api_key) {
+      console.log(`❌ No API key provided`);
       return res.status(401).json({
         error: 'API key required',
         message: 'Please provide an API key in the URL: ?api_key=your_api_key',
@@ -1349,16 +1362,22 @@ app.get('/:dimensions.jpg', async (req, res) => {
     }
     
     // Validate API key and get user info
-    const keyData = validateApiKey(api_key);
+    console.log(`🔑 Validating API key: ${api_key}`);
+    const keyData = await validateApiKey(api_key);
     if (!keyData) {
+      console.log(`❌ Invalid API key: ${api_key}`);
       return res.status(401).json({
         error: 'Invalid API key',
         message: 'The provided API key is invalid or inactive'
       });
     }
     
+    console.log(`✅ API key valid for user: ${keyData.user.email}`);
+    console.log(`💳 User credits: ${keyData.user.credits}`);
+    
     // Check if user has enough credits
     if (keyData.user.credits < 1) {
+      console.log(`❌ Insufficient credits: ${keyData.user.credits}`);
       return res.status(402).json({
         error: 'Insufficient credits',
         message: `You need at least 1 credit to generate an image. You have ${keyData.user.credits} credits remaining.`,
@@ -1388,6 +1407,9 @@ app.get('/:dimensions.jpg', async (req, res) => {
 
     // Use text prompt or default
     const prompt = text || 'abstract art, colorful, modern design';
+    
+    console.log(`🎨 Generating image with prompt: "${prompt}"`);
+    console.log(`📐 Dimensions: ${width}x${height}`);
 
     // Create cache key
     const cacheKey = `${width}x${height}_${prompt}`;
@@ -1396,9 +1418,10 @@ app.get('/:dimensions.jpg', async (req, res) => {
     let imageBuffer = imageCache.get(cacheKey);
     
     if (!imageBuffer) {
-      console.log(`Generating new image for prompt: "${prompt}"`);
+      console.log(`🔄 Cache miss - generating new image for prompt: "${prompt}"`);
       
       try {
+        console.log(`🤖 Calling generateImage function...`);
         // Generate image using available APIs
         imageBuffer = await generateImage(prompt, width, height);
 
@@ -1442,7 +1465,8 @@ app.get('/:dimensions.jpg', async (req, res) => {
     res.send(imageBuffer);
 
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('❌ Error generating image:', error);
+    console.error('❌ Full error details:', error);
     
     // Fallback: Generate a simple placeholder image
     const { dimensions } = req.params;
