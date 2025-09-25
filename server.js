@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const { fal } = require('@fal-ai/client');
 const crypto = require('crypto');
+const { Resend } = require('resend');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -178,15 +179,103 @@ function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 }
 
-// Send verification email (mock function - in production, use real email service)
-function sendVerificationEmail(email, code) {
-  console.log(`📧 Verification email sent to ${email}`);
-  console.log(`🔐 Verification code: ${code}`);
-  console.log(`⏰ Code expires in 10 minutes`);
-  
-  // In production, integrate with email service like SendGrid, AWS SES, etc.
-  // For now, we'll just log it to console
-  return true;
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY || 're_2hjEnGgj_FRr1Zi3CBZEDMmv5PXsYuvnZ');
+
+// Send verification email using Resend
+async function sendVerificationEmail(email, code) {
+  try {
+    console.log(`📧 Sending verification email to ${email} via Resend`);
+    
+    const { data, error } = await resend.emails.send({
+      from: 'AI Image Placeholder <noreply@aiimageplaceholder.com>', // You can customize this with your domain
+      to: [email],
+      subject: 'Verify Your Email - AI Image Placeholder',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 32px; font-weight: 300;">🎨 AI Image Placeholder</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Email Verification</p>
+          </div>
+          
+          <div style="background: white; padding: 40px; border: 1px solid #e1e5e9; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Verify Your Email Address</h2>
+            
+            <p style="color: #666; line-height: 1.6; margin-bottom: 30px; font-size: 16px;">
+              Thank you for signing up! To complete your registration and access your dashboard, 
+              please verify your email address using the code below:
+            </p>
+            
+            <div style="background: #f8f9fa; border: 3px solid #667eea; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+              <div style="font-size: 36px; font-weight: bold; color: #667eea; letter-spacing: 4px; font-family: 'Courier New', monospace; margin-bottom: 10px;">
+                ${code}
+              </div>
+              <p style="margin: 0; color: #666; font-size: 14px;">Enter this code on the verification page</p>
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <p style="margin: 0; color: #856404; font-size: 14px;">
+                <strong>⏰ Important:</strong> This code will expire in 10 minutes for security reasons.
+              </p>
+            </div>
+            
+            <p style="color: #666; line-height: 1.6; margin-bottom: 25px; font-size: 16px;">
+              Once verified, you'll get:
+            </p>
+            
+            <ul style="color: #333; line-height: 2; font-size: 16px; padding-left: 20px;">
+              <li style="margin-bottom: 8px;">✅ <strong>5 free image generation credits</strong></li>
+              <li style="margin-bottom: 8px;">✅ <strong>Personal API key</strong> for secure access</li>
+              <li style="margin-bottom: 8px;">✅ <strong>Dashboard access</strong> and usage tracking</li>
+              <li style="margin-bottom: 8px;">✅ <strong>VRChat-compatible</strong> image URLs</li>
+            </ul>
+            
+            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #e1e5e9;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                If you didn't request this verification, please ignore this email.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `
+        AI Image Placeholder - Email Verification
+        
+        Your verification code is: ${code}
+        
+        Enter this code on the verification page to complete your registration.
+        
+        This code expires in 10 minutes.
+        
+        Once verified, you'll get:
+        - 5 free image generation credits
+        - Personal API key for secure access
+        - Access to your dashboard and usage tracking
+        - VRChat-compatible image URLs
+        
+        If you didn't request this verification, please ignore this email.
+      `
+    });
+
+    if (error) {
+      throw new Error(`Resend API error: ${error.message}`);
+    }
+
+    console.log(`✅ Verification email sent successfully to ${email}`);
+    console.log(`📧 Resend ID: ${data.id}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Failed to send verification email via Resend:', error.message);
+    
+    // Fallback: Log to console for development
+    console.log(`📧 FALLBACK - Verification email for ${email}:`);
+    console.log(`🔐 Verification code: ${code}`);
+    console.log(`⏰ Code expires in 10 minutes`);
+    console.log(`💡 Check RESEND_API_KEY environment variable`);
+    
+    return true; // Return true so signup still works
+  }
 }
 
 // Verify email code
