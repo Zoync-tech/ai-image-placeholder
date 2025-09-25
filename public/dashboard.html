@@ -233,6 +233,56 @@
         .margin-top {
             margin-top: 20px;
         }
+
+        .generation-item {
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .generation-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #e1e5e9;
+        }
+
+        .generation-info {
+            flex: 1;
+        }
+
+        .generation-prompt {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .generation-details {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .generation-date {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .generation-url {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -286,6 +336,21 @@
                 <div id="errorMessage" class="error hidden"></div>
                 <div id="successMessage" class="success hidden"></div>
             </div>
+
+            <!-- Image Generations History Section -->
+            <div class="section">
+                <h2>Your Generated Images</h2>
+                <div id="imageGenerations">
+                    <div class="loading" id="generationsLoading">
+                        <div class="spinner"></div>
+                        <p>Loading your image history...</p>
+                    </div>
+                    <div id="noGenerations" class="info" style="display: none;">
+                        <p>No images generated yet. Use your API key to create your first AI image!</p>
+                    </div>
+                    <div id="generationsList" style="display: none;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -296,6 +361,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             await checkAuthStatus();
             await loadUserApiKey();
+            await loadImageGenerations();
         });
 
         async function checkAuthStatus() {
@@ -489,6 +555,69 @@
         function hideMessages() {
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('successMessage').style.display = 'none';
+        }
+
+        async function loadImageGenerations() {
+            const token = localStorage.getItem('userToken');
+            
+            if (!token) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user/image-generations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayImageGenerations(data.generations);
+                } else {
+                    console.error('Failed to load image generations:', response.status);
+                    document.getElementById('generationsLoading').style.display = 'none';
+                    document.getElementById('noGenerations').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading image generations:', error);
+                document.getElementById('generationsLoading').style.display = 'none';
+                document.getElementById('noGenerations').style.display = 'block';
+            }
+        }
+
+        function displayImageGenerations(generations) {
+            document.getElementById('generationsLoading').style.display = 'none';
+            
+            if (!generations || generations.length === 0) {
+                document.getElementById('noGenerations').style.display = 'block';
+                return;
+            }
+
+            const baseUrl = window.location.origin;
+            const generationsList = document.getElementById('generationsList');
+            
+            generations.forEach(generation => {
+                const generationItem = document.createElement('div');
+                generationItem.className = 'generation-item';
+                
+                // Create the image URL
+                const imageUrl = `${baseUrl}/${generation.dimensions}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(generation.prompt)}`;
+                
+                generationItem.innerHTML = `
+                    <img src="${imageUrl}" alt="${generation.prompt}" class="generation-image" onerror="this.style.display='none'">
+                    <div class="generation-info">
+                        <div class="generation-prompt">${generation.prompt}</div>
+                        <div class="generation-details">Dimensions: ${generation.dimensions}</div>
+                        <div class="generation-date">Generated: ${new Date(generation.created_at).toLocaleString()}</div>
+                        <div class="generation-url">${imageUrl}</div>
+                    </div>
+                `;
+                
+                generationsList.appendChild(generationItem);
+            });
+            
+            document.getElementById('generationsList').style.display = 'block';
         }
     </script>
 </body>

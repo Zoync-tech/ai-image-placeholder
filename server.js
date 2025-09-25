@@ -563,6 +563,87 @@ class SupabaseService {
       return true;
     }
   }
+
+  // Image Generation Tracking
+  static async saveImageGeneration(generationData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const id = 'gen_' + crypto.randomUUID().substring(0, 8);
+      const generation = { id, ...generationData };
+      // Store in a simple array for now (you could use a Map if needed)
+      if (!global.imageGenerations) global.imageGenerations = [];
+      global.imageGenerations.push(generation);
+      console.log(`🖼️ Saved image generation in in-memory storage: ${id}`);
+      return generation;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('image_generations')
+        .insert([generationData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase saveImageGeneration error:', error);
+        // Fallback to in-memory storage
+        const id = 'gen_' + crypto.randomUUID().substring(0, 8);
+        const generation = { id, ...generationData };
+        if (!global.imageGenerations) global.imageGenerations = [];
+        global.imageGenerations.push(generation);
+        console.log(`🖼️ Saved image generation in in-memory storage (fallback): ${id}`);
+        return generation;
+      }
+
+      console.log(`✅ Saved image generation in Supabase:`, data);
+      return data;
+    } catch (error) {
+      console.error('Supabase saveImageGeneration exception:', error);
+      // Fallback to in-memory storage
+      const id = 'gen_' + crypto.randomUUID().substring(0, 8);
+      const generation = { id, ...generationData };
+      if (!global.imageGenerations) global.imageGenerations = [];
+      global.imageGenerations.push(generation);
+      console.log(`🖼️ Saved image generation in in-memory storage (exception fallback): ${id}`);
+      return generation;
+    }
+  }
+
+  static async getUserImageGenerations(userId) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      if (!global.imageGenerations) global.imageGenerations = [];
+      const userGenerations = global.imageGenerations.filter(gen => gen.user_id === userId);
+      console.log(`📊 Retrieved ${userGenerations.length} image generations from in-memory storage`);
+      return userGenerations;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('image_generations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50); // Limit to last 50 generations
+
+      if (error) {
+        console.error('Supabase getUserImageGenerations error:', error);
+        // Fallback to in-memory storage
+        if (!global.imageGenerations) global.imageGenerations = [];
+        const userGenerations = global.imageGenerations.filter(gen => gen.user_id === userId);
+        return userGenerations;
+      }
+
+      console.log(`📊 Retrieved ${data.length} image generations from Supabase`);
+      return data || [];
+    } catch (error) {
+      console.error('Supabase getUserImageGenerations exception:', error);
+      // Fallback to in-memory storage
+      if (!global.imageGenerations) global.imageGenerations = [];
+      const userGenerations = global.imageGenerations.filter(gen => gen.user_id === userId);
+      return userGenerations;
+    }
+  }
 }
 
 // Send verification email using Resend
@@ -1303,6 +1384,24 @@ app.get('/api/user/api-keys', validateSession, async (req, res) => {
   }
 });
 
+// User image generations endpoint
+app.get('/api/user/image-generations', validateSession, async (req, res) => {
+  try {
+    console.log(`🖼️ Getting image generations for user: ${req.userId}`);
+    
+    const generations = await SupabaseService.getUserImageGenerations(req.userId);
+    
+    console.log(`✅ Found ${generations.length} image generations for user`);
+    res.json({ generations: generations });
+  } catch (error) {
+    console.error('❌ Get image generations error:', error);
+    res.status(500).json({
+      error: 'Failed to get image generations',
+      details: error.message
+    });
+  }
+});
+
 // API Routes for user management
 app.get('/api/info', (req, res) => {
   const { api_key } = req.query;
@@ -1528,10 +1627,25 @@ app.get('/:dimensions.jpg', async (req, res) => {
       console.log(`Using cached image for prompt: "${prompt}"`);
     }
 
+    // Save image generation record
+    try {
+      await SupabaseService.saveImageGeneration({
+        user_id: keyData.user_id,
+        api_key_id: keyData.id,
+        prompt: prompt,
+        dimensions: dimensions,
+        success: true,
+        created_at: new Date().toISOString()
+      });
+      console.log(`✅ Saved image generation record for user ${keyData.user_id}`);
+    } catch (saveError) {
+      console.error('Error saving image generation:', saveError);
+    }
+
     // Deduct credit after successful generation
     try {
-      const remainingCredits = deductCredits(keyData.user_id, 1);
-      updateApiKeyStats(api_key);
+      const remainingCredits = await deductCredits(keyData.user_id, 1);
+      await updateApiKeyStats(api_key);
       
       console.log(`✅ Image generated successfully for user ${keyData.user_id}. Credits remaining: ${remainingCredits}`);
     } catch (creditError) {
