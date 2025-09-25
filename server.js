@@ -1117,43 +1117,61 @@ app.post('/api/auth/resend-verification', (req, res) => {
   });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { email } = req.body;
-  
-  if (!email) {
-    return res.status(400).json({
-      error: 'Email is required'
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required'
+      });
+    }
+    
+    console.log(`🔐 Login attempt for email: ${email}`);
+    
+    // Find user by email using SupabaseService
+    const user = await SupabaseService.getUserByEmail(email);
+    if (!user) {
+      console.log(`❌ User not found for email: ${email}`);
+      return res.status(401).json({
+        error: 'User not found. Please sign up first.'
+      });
+    }
+    
+    console.log(`✅ Found user:`, user);
+    
+    // Check if email is verified
+    if (!user.email_verified) {
+      console.log(`❌ Email not verified for user: ${user.id}`);
+      return res.status(403).json({
+        error: 'Email not verified. Please verify your email first.',
+        requires_verification: true
+      });
+    }
+    
+    // Create session using SupabaseService
+    const sessionData = await SupabaseService.createSession(user.id);
+    if (!sessionData) {
+      console.log(`❌ Failed to create session for user: ${user.id}`);
+      return res.status(500).json({
+        error: 'Failed to create session'
+      });
+    }
+    
+    console.log(`✅ Created session:`, sessionData.token);
+    
+    res.json({
+      token: sessionData.token,
+      user: user,
+      message: 'Login successful'
+    });
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    res.status(500).json({
+      error: 'Login failed',
+      details: error.message
     });
   }
-  
-  // Find user by email
-  const user = Array.from(users.values()).find(u => u.email === email);
-  if (!user) {
-    return res.status(401).json({
-      error: 'User not found. Please sign up first.'
-    });
-  }
-  
-  // Check if email is verified
-  if (!user.email_verified) {
-    return res.status(403).json({
-      error: 'Email not verified. Please verify your email first.',
-      requires_verification: true
-    });
-  }
-  
-  // Create session token
-  const token = crypto.randomUUID();
-  sessions.set(token, {
-    user_id: user.id,
-    created_at: new Date().toISOString()
-  });
-  
-  res.json({
-    token: token,
-    user: user,
-    message: 'Login successful'
-  });
 });
 
 // Middleware to validate session token
@@ -1442,6 +1460,56 @@ app.get('/:dimensions', async (req, res) => {
   } catch (error) {
     console.error('Error in fallback route:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Debug login endpoint
+app.post('/api/debug-login', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    console.log(`🔍 Debug login for email: ${email}`);
+    
+    // Check Supabase status
+    const supabaseStatus = {
+      configured: isSupabaseConfigured,
+      url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+    };
+    
+    // Try to find user in Supabase
+    let supabaseUser = null;
+    if (isSupabaseConfigured) {
+      try {
+        supabaseUser = await SupabaseService.getUserByEmail(email);
+        console.log(`📊 Supabase user:`, supabaseUser);
+      } catch (error) {
+        console.error('❌ Supabase user lookup error:', error);
+      }
+    }
+    
+    // Check in-memory storage
+    const inMemoryUser = Array.from(users.values()).find(u => u.email === email);
+    console.log(`📊 In-memory user:`, inMemoryUser);
+    
+    // Check all users in memory
+    const allInMemoryUsers = Array.from(users.values());
+    console.log(`📊 All in-memory users:`, allInMemoryUsers);
+    
+    res.json({
+      email: email,
+      supabase_status: supabaseStatus,
+      supabase_user: supabaseUser,
+      in_memory_user: inMemoryUser,
+      all_in_memory_users: allInMemoryUsers,
+      total_in_memory_users: allInMemoryUsers.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Debug login error:', error);
+    res.status(500).json({
+      error: 'Debug failed',
+      details: error.message
+    });
   }
 });
 
