@@ -6,14 +6,17 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service role key for server-side operations
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY; // Anon key for client-side operations
 
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-  process.exit(1);
+// Check if Supabase is configured
+const isSupabaseConfigured = supabaseUrl && supabaseServiceKey && supabaseAnonKey;
+
+if (!isSupabaseConfigured) {
+  console.warn('⚠️  Supabase environment variables not set. Authentication features will be disabled.');
+  console.warn('Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ANON_KEY to enable authentication.');
 }
 
-// Create Supabase clients
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase clients (with fallback for missing config)
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseServiceKey) : null;
+const supabaseClient = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // Utility functions for database operations
 class SupabaseService {

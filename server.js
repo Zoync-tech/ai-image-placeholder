@@ -119,12 +119,166 @@ app.options('*', (req, res) => {
   res.status(200).end();
 });
 
+// API Routes for authentication and user management
+app.get('/api/user/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const profile = await SupabaseService.getOrCreateUserProfile(user);
+    res.json(profile);
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/user/api-keys', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const apiKeys = await SupabaseService.getUserApiKeys(user.id);
+    res.json(apiKeys);
+  } catch (error) {
+    console.error('Error getting API keys:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/user/api-keys', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { name } = req.body;
+    const apiKey = await SupabaseService.generateApiKey(user.id, name);
+    res.json(apiKey);
+  } catch (error) {
+    console.error('Error generating API key:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/user/history', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const history = await SupabaseService.getUserImageHistory(user.id);
+    res.json(history);
+  } catch (error) {
+    console.error('Error getting user history:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Main route handler for image generation (with .jpg extension for VRChat)
 app.get('/:dimensions.jpg', async (req, res) => {
   try {
     const { dimensions } = req.params;
     const { text, api_key } = req.query;
     
+    // Check if Supabase is configured
+    if (!process.env.SUPABASE_URL) {
+      // Fallback mode: Generate images without authentication (for testing)
+      console.log('⚠️  Running in fallback mode - no authentication required');
+      
+      // Parse dimensions (e.g., "600x400")
+      const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
+      if (!dimensionMatch) {
+        return res.status(400).json({
+          error: 'Invalid dimensions format',
+          message: 'Use: widthxheight (e.g., 600x400)'
+        });
+      }
+
+      const width = parseInt(dimensionMatch[1]);
+      const height = parseInt(dimensionMatch[2]);
+
+      // Validate dimensions
+      if (width < 1 || height < 1 || width > 4096 || height > 4096) {
+        return res.status(400).json({
+          error: 'Invalid dimensions',
+          message: 'Dimensions must be between 1x1 and 4096x4096'
+        });
+      }
+
+      // Use text prompt or default
+      const prompt = text || 'abstract art, colorful, modern design';
+
+      // Create cache key
+      const cacheKey = `${width}x${height}_${prompt}`;
+
+      // Check cache first
+      let imageBuffer = imageCache.get(cacheKey);
+      
+      if (!imageBuffer) {
+        console.log(`Generating new image for prompt: "${prompt}"`);
+        
+        try {
+          // Generate image using available APIs
+          imageBuffer = await generateImage(prompt, width, height);
+
+          // Resize if needed (in case API doesn't respect exact dimensions)
+          if (imageBuffer && imageBuffer.length > 0) {
+            imageBuffer = await resizeImage(imageBuffer, width, height);
+            
+            // Cache the result
+            imageCache.set(cacheKey, imageBuffer);
+          }
+        } catch (error) {
+          console.log('Image generation failed, will use fallback SVG');
+          throw error;
+        }
+      } else {
+        console.log(`Using cached image for prompt: "${prompt}"`);
+      }
+
+      // Set appropriate headers for better compatibility
+      res.set({
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400',
+        'Content-Length': imageBuffer.length,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, User-Agent',
+        'X-Content-Type-Options': 'nosniff'
+      });
+
+      res.send(imageBuffer);
+      return;
+    }
+    
+    // Normal authenticated mode
     // Validate API key
     if (!api_key) {
       return res.status(401).json({
@@ -164,7 +318,10 @@ app.get('/:dimensions.jpg', async (req, res) => {
     // Parse dimensions (e.g., "600x400")
     const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
     if (!dimensionMatch) {
-      return res.status(400).send('Invalid dimensions format. Use: widthxheight (e.g., 600x400)');
+      return res.status(400).json({
+        error: 'Invalid dimensions format',
+        message: 'Use: widthxheight (e.g., 600x400)'
+      });
     }
 
     const width = parseInt(dimensionMatch[1]);
@@ -172,7 +329,10 @@ app.get('/:dimensions.jpg', async (req, res) => {
 
     // Validate dimensions
     if (width < 1 || height < 1 || width > 4096 || height > 4096) {
-      return res.status(400).send('Dimensions must be between 1x1 and 4096x4096');
+      return res.status(400).json({
+        error: 'Invalid dimensions',
+        message: 'Dimensions must be between 1x1 and 4096x4096'
+      });
     }
 
     // Use text prompt or default
@@ -200,10 +360,38 @@ app.get('/:dimensions.jpg', async (req, res) => {
         }
       } catch (error) {
         console.log('Image generation failed, will use fallback SVG');
+        
+        // Log failed generation
+        await SupabaseService.logImageGeneration(
+          apiKeyData.user_id,
+          apiKeyData.id,
+          prompt,
+          dimensions,
+          false,
+          error.message
+        );
+        
         throw error; // This will trigger the fallback SVG generation
       }
     } else {
       console.log(`Using cached image for prompt: "${prompt}"`);
+    }
+
+    // Deduct credit after successful generation
+    try {
+      await SupabaseService.deductCredits(apiKeyData.user_id, 1);
+      await SupabaseService.logImageGeneration(
+        apiKeyData.user_id,
+        apiKeyData.id,
+        prompt,
+        dimensions,
+        true
+      );
+      
+      console.log(`✅ Image generated successfully for user ${apiKeyData.user_id}. Credits remaining: ${userCredits - 1}`);
+    } catch (creditError) {
+      console.error('Error deducting credits:', creditError);
+      // Don't fail the request if credit deduction fails, but log it
     }
 
     // Set appropriate headers for better compatibility
@@ -248,7 +436,7 @@ app.get('/:dimensions.jpg', async (req, res) => {
       });
       res.send(svg);
     } else {
-      res.status(500).send('Internal Server Error');
+      res.status(500).json({ error: 'Internal Server Error' });
     }
   }
 });
@@ -257,94 +445,24 @@ app.get('/:dimensions.jpg', async (req, res) => {
 app.get('/:dimensions', async (req, res) => {
   try {
     const { dimensions } = req.params;
-    const { text } = req.query;
+    const { text, api_key } = req.query;
     
-    // Parse dimensions (e.g., "600x400")
-    const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
-    if (!dimensionMatch) {
-      return res.status(400).send('Invalid dimensions format. Use: widthxheight (e.g., 600x400)');
+    // For non-.jpg requests, redirect to .jpg version with API key
+    if (api_key) {
+      const redirectUrl = `/${dimensions}.jpg?text=${encodeURIComponent(text || '')}&api_key=${api_key}`;
+      return res.redirect(redirectUrl);
     }
-
-    const width = parseInt(dimensionMatch[1]);
-    const height = parseInt(dimensionMatch[2]);
-
-    // Validate dimensions
-    if (width < 1 || height < 1 || width > 4096 || height > 4096) {
-      return res.status(400).send('Dimensions must be between 1x1 and 4096x4096');
-    }
-
-    // Use text prompt or default
-    const prompt = text || 'abstract art, colorful, modern design';
-
-    // Create cache key
-    const cacheKey = `${width}x${height}_${prompt}`;
-
-    // Check cache first
-    let imageBuffer = imageCache.get(cacheKey);
     
-    if (!imageBuffer) {
-      console.log(`Generating new image for prompt: "${prompt}"`);
-      
-      try {
-        // Generate image using available APIs
-        imageBuffer = await generateImage(prompt, width, height);
-
-        // Resize if needed (in case API doesn't respect exact dimensions)
-        if (imageBuffer && imageBuffer.length > 0) {
-          imageBuffer = await resizeImage(imageBuffer, width, height);
-          
-          // Cache the result
-          imageCache.set(cacheKey, imageBuffer);
-        }
-      } catch (error) {
-        console.log('Image generation failed, will use fallback SVG');
-        throw error; // This will trigger the fallback SVG generation
-      }
-    } else {
-      console.log(`Using cached image for prompt: "${prompt}"`);
-    }
-
-    // Set appropriate headers for better compatibility
-    res.set({
-      'Content-Type': 'image/jpeg',
-      'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-      'Content-Length': imageBuffer.length,
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, User-Agent',
-      'X-Content-Type-Options': 'nosniff'
+    // If no API key, show error
+    return res.status(401).json({
+      error: 'API key required',
+      message: 'Please provide an API key in the URL: ?api_key=your_api_key',
+      example: `/${dimensions}?api_key=your_api_key&text=your_prompt`
     });
-
-    res.send(imageBuffer);
-
+    
   } catch (error) {
-    console.error('Error generating image:', error);
-    
-    // Fallback: Generate a simple placeholder image
-    const { dimensions } = req.params;
-    const { text } = req.query;
-    
-    const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
-    if (dimensionMatch) {
-      const width = parseInt(dimensionMatch[1]);
-      const height = parseInt(dimensionMatch[2]);
-      
-      // Create a simple SVG placeholder
-      const svg = `
-        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-          <rect width="100%" height="100%" fill="#f0f0f0"/>
-          <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" 
-                text-anchor="middle" dy=".3em" fill="#666">
-            ${text || 'AI Image Placeholder'}
-          </text>
-        </svg>
-      `;
-      
-      res.set('Content-Type', 'image/svg+xml');
-      res.send(svg);
-    } else {
-      res.status(500).send('Internal Server Error');
-    }
+    console.error('Error in fallback route:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -352,8 +470,8 @@ app.get('/:dimensions', async (req, res) => {
 if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`🚀 AI Image Placeholder server running on port ${PORT}`);
-    console.log(`📝 Example usage: http://localhost:${PORT}/600x400?text=Hello+World`);
-    console.log(`🔑 Make sure to set FAL_KEY environment variable`);
+    console.log(`📝 Example usage: http://localhost:${PORT}/600x400.jpg?api_key=your_key&text=Hello+World`);
+    console.log(`🔑 Make sure to set FAL_KEY and Supabase environment variables`);
   });
 }
 
