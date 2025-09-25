@@ -9,7 +9,7 @@ ALTER TABLE IF EXISTS email_verifications ENABLE ROW LEVEL SECURITY;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS api_keys (
     id SERIAL PRIMARY KEY,
     api_key TEXT UNIQUE NOT NULL,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL DEFAULT 'Default API Key',
     is_active BOOLEAN DEFAULT TRUE,
     total_requests INTEGER DEFAULT 0,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 CREATE TABLE IF NOT EXISTS sessions (
     id SERIAL PRIMARY KEY,
     token TEXT UNIQUE NOT NULL,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '30 days')
 );
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 -- Image Generations table (for tracking usage)
 CREATE TABLE IF NOT EXISTS image_generations (
     id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     api_key_id INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
     prompt TEXT NOT NULL,
     dimensions TEXT NOT NULL,
@@ -76,30 +76,30 @@ CREATE INDEX IF NOT EXISTS idx_image_generations_user_id ON image_generations(us
 
 -- Users can only see their own data
 CREATE POLICY "Users can view own data" ON users
-    FOR SELECT USING (auth.uid()::text = id);
+    FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own data" ON users
-    FOR UPDATE USING (auth.uid()::text = id);
+    FOR UPDATE USING (auth.uid() = id);
 
 -- API Keys policies
 CREATE POLICY "Users can view own API keys" ON api_keys
-    FOR SELECT USING (auth.uid()::text = user_id);
+    FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert own API keys" ON api_keys
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own API keys" ON api_keys
-    FOR UPDATE USING (auth.uid()::text = user_id);
+    FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own API keys" ON api_keys
-    FOR DELETE USING (auth.uid()::text = user_id);
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- Sessions policies
 CREATE POLICY "Users can view own sessions" ON sessions
-    FOR SELECT USING (auth.uid()::text = user_id);
+    FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert own sessions" ON sessions
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Email verifications (no RLS needed for verification process)
 CREATE POLICY "Allow all operations on email verifications" ON email_verifications
@@ -107,13 +107,13 @@ CREATE POLICY "Allow all operations on email verifications" ON email_verificatio
 
 -- Image generations policies
 CREATE POLICY "Users can view own image generations" ON image_generations
-    FOR SELECT USING (auth.uid()::text = user_id);
+    FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert own image generations" ON image_generations
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Functions for credit management
-CREATE OR REPLACE FUNCTION deduct_credit(p_user_id TEXT, p_credits INTEGER DEFAULT 1)
+CREATE OR REPLACE FUNCTION deduct_credit(p_user_id UUID, p_credits INTEGER DEFAULT 1)
 RETURNS INTEGER AS $$
 DECLARE
     current_credits INTEGER;
@@ -199,7 +199,7 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
 -- Create a sample user for testing
 INSERT INTO users (id, email, name, email_verified, credits, total_generations)
 VALUES (
-    'user_demo123',
+    '550e8400-e29b-41d4-a716-446655440000'::UUID,
     'demo@example.com',
     'Demo User',
     true,
@@ -211,7 +211,7 @@ VALUES (
 INSERT INTO api_keys (api_key, user_id, name, is_active, total_requests)
 VALUES (
     'ai_demo123456789',
-    'user_demo123',
+    '550e8400-e29b-41d4-a716-446655440000'::UUID,
     'Demo API Key',
     true,
     0

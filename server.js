@@ -154,7 +154,8 @@ async function validateApiKey(apiKey) {
     return null;
   }
   
-  const user = await SupabaseService.getUserByEmail(keyData.user_id);
+  // Get user by ID instead of email
+  const user = await SupabaseService.getUserById(keyData.user_id);
   if (!user) {
     return null;
   }
@@ -164,7 +165,7 @@ async function validateApiKey(apiKey) {
 
 // Deduct credits
 async function deductCredits(userId, credits = 1) {
-  const user = await SupabaseService.getUserByEmail(userId);
+  const user = await SupabaseService.getUserById(userId);
   if (!user) {
     throw new Error('User not found');
   }
@@ -204,6 +205,11 @@ class SupabaseService {
       return user;
     }
 
+    // Generate UUID for user ID if not provided
+    if (!userData.id) {
+      userData.id = crypto.randomUUID();
+    }
+
     const { data, error } = await supabase
       .from('users')
       .insert([userData])
@@ -224,6 +230,22 @@ class SupabaseService {
       .from('users')
       .select('*')
       .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+    return data;
+  }
+
+  static async getUserById(userId) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      return users.get(userId) || null;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
@@ -626,9 +648,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     }
     
     // Create new user
-    const userId = 'user_' + crypto.randomUUID().substring(0, 8);
     const userData = {
-      id: userId,
       email: email,
       name: verification.name,
       email_verified: true,
@@ -643,7 +663,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
     const apiKeyData = {
       api_key: apiKey,
-      user_id: userId,
+      user_id: user.id,
       name: 'Default API Key',
       is_active: true,
       created_at: new Date().toISOString(),
@@ -657,7 +677,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     const token = crypto.randomUUID();
     const sessionData = {
       token: token,
-      user_id: userId,
+      user_id: user.id,
       created_at: new Date().toISOString()
     };
     
