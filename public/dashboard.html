@@ -256,9 +256,8 @@
             <div class="section">
                 <h2>Your API Key</h2>
                 
-                <div id="noApiKey" class="info">
-                    <p>You don't have an API key yet. Create one to start generating AI images!</p>
-                    <button class="btn" onclick="createApiKey()">Create API Key</button>
+                <div id="noApiKey" class="info" style="display: none;">
+                    <p>Creating your API key...</p>
                 </div>
 
                 <div id="apiKeySection" class="api-key-section" style="display: none;">
@@ -376,9 +375,9 @@
                         const imageUrl = `${baseUrl}/WIDTHxHEIGHT.jpg?api_key=${userApiKey}&text=YOUR_TEXT`;
                         document.getElementById('urlDisplay').textContent = imageUrl;
                     } else {
-                        // User has no API key
-                        document.getElementById('noApiKey').style.display = 'block';
-                        document.getElementById('apiKeySection').style.display = 'none';
+                        // User has no API key - auto-create one
+                        console.log('No API key found, auto-creating one...');
+                        await createApiKey();
                     }
                 } else {
                     console.error('Failed to load API keys:', response.status);
