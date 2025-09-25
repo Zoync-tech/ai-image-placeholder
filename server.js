@@ -435,7 +435,7 @@ async function sendVerificationEmail(email, code) {
     console.log(`📧 Sending verification email to ${email} via Resend`);
     
     const { data, error } = await resend.emails.send({
-      from: 'AI Image Placeholder <noreply@aiimageplaceholder.com>', // You can customize this with your domain
+      from: 'AI Image Placeholder <onboarding@resend.dev>', // Using Resend's default domain for immediate functionality
       to: [email],
       subject: 'Verify Your Email - AI Image Placeholder',
       html: `
@@ -505,6 +505,7 @@ async function sendVerificationEmail(email, code) {
     });
 
     if (error) {
+      console.error('❌ Resend API Error:', error);
       throw new Error(`Resend API error: ${error.message}`);
     }
 
@@ -514,12 +515,14 @@ async function sendVerificationEmail(email, code) {
 
   } catch (error) {
     console.error('❌ Failed to send verification email via Resend:', error.message);
+    console.error('❌ Full error details:', error);
     
     // Fallback: Log to console for development
     console.log(`📧 FALLBACK - Verification email for ${email}:`);
     console.log(`🔐 Verification code: ${code}`);
     console.log(`⏰ Code expires in 10 minutes`);
     console.log(`💡 Check RESEND_API_KEY environment variable`);
+    console.log(`💡 Current RESEND_API_KEY: ${process.env.RESEND_API_KEY ? 'SET' : 'NOT SET'}`);
     
     return true; // Return true so signup still works
   }
@@ -559,8 +562,60 @@ app.get('/health', (req, res) => {
     mode: 'with-auth',
     total_users: users.size,
     total_api_keys: apiKeys.size,
-    demo_api_key: defaultApiKey
+    demo_api_key: defaultApiKey,
+    resend_configured: !!process.env.RESEND_API_KEY,
+    supabase_configured: isSupabaseConfigured
   });
+});
+
+// Test email endpoint
+app.post('/api/test-email', async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    console.log(`🧪 Testing email to ${email}`);
+    
+    const { data, error } = await resend.emails.send({
+      from: 'AI Image Placeholder <onboarding@resend.dev>',
+      to: [email],
+      subject: 'Test Email - AI Image Placeholder',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1>🎨 AI Image Placeholder</h1>
+          <p>This is a test email to verify your email configuration is working correctly.</p>
+          <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+          <p>If you receive this email, your Resend configuration is working!</p>
+        </div>
+      `,
+      text: `AI Image Placeholder - Test Email\n\nThis is a test email to verify your email configuration is working correctly.\n\nTimestamp: ${new Date().toISOString()}\n\nIf you receive this email, your Resend configuration is working!`
+    });
+
+    if (error) {
+      console.error('❌ Test email error:', error);
+      return res.status(500).json({ 
+        error: 'Failed to send test email',
+        details: error.message 
+      });
+    }
+
+    console.log(`✅ Test email sent successfully to ${email}`);
+    res.json({ 
+      success: true, 
+      messageId: data.id,
+      message: 'Test email sent successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Test email exception:', error);
+    res.status(500).json({ 
+      error: 'Failed to send test email',
+      details: error.message 
+    });
+  }
 });
 
 // Serve the demo page at root
