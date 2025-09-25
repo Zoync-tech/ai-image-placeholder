@@ -1150,18 +1150,26 @@ app.post('/api/auth/login', async (req, res) => {
     }
     
     // Create session using SupabaseService
-    const sessionData = await SupabaseService.createSession(user.id);
-    if (!sessionData) {
+    const token = 'session_' + crypto.randomUUID();
+    const sessionData = {
+      token,
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+    };
+    
+    const createdSession = await SupabaseService.createSession(sessionData);
+    if (!createdSession) {
       console.log(`❌ Failed to create session for user: ${user.id}`);
       return res.status(500).json({
         error: 'Failed to create session'
       });
     }
     
-    console.log(`✅ Created session:`, sessionData.token);
+    console.log(`✅ Created session:`, createdSession.token);
     
     res.json({
-      token: sessionData.token,
+      token: createdSession.token,
       user: user,
       message: 'Login successful'
     });

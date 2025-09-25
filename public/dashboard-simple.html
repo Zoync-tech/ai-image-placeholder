@@ -367,6 +367,8 @@
             const token = localStorage.getItem('userToken');
             const email = localStorage.getItem('userEmail');
             
+            console.log('🔍 Checking auth status:', { token: token ? 'SET' : 'NOT SET', email });
+            
             if (token && email) {
                 // User is logged in, show user info
                 document.getElementById('userInfo').style.display = 'block';
@@ -374,27 +376,36 @@
                 
                 // Load user data
                 try {
+                    console.log('📡 Fetching user profile with token:', token.substring(0, 20) + '...');
                     const response = await fetch('/api/user/profile', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
                     
+                    console.log('📊 Profile response status:', response.status);
+                    
                     if (response.ok) {
                         const userData = await response.json();
+                        console.log('✅ User data loaded:', userData);
                         document.getElementById('userCredits').textContent = userData.credits || 0;
                         document.getElementById('totalGenerations').textContent = userData.total_generations || 0;
                         document.getElementById('accountCreated').textContent = new Date(userData.created_at).toLocaleDateString();
                     } else if (response.status === 401) {
-                        // Token expired or invalid
+                        console.log('❌ Token expired or invalid, redirecting to login');
                         localStorage.removeItem('userToken');
                         localStorage.removeItem('userEmail');
                         window.location.href = '/auth.html';
+                    } else {
+                        console.log('❌ Unexpected response status:', response.status);
+                        const errorText = await response.text();
+                        console.log('❌ Error response:', errorText);
                     }
                 } catch (error) {
-                    console.error('Error loading user data:', error);
+                    console.error('❌ Error loading user data:', error);
                 }
             } else {
+                console.log('❌ No token or email found, redirecting to login');
                 // User not logged in, redirect to auth page
                 window.location.href = '/auth.html';
             }
