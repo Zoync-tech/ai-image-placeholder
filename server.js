@@ -202,22 +202,45 @@ class SupabaseService {
       const userId = 'user_' + crypto.randomUUID().substring(0, 8);
       const user = { id: userId, ...userData };
       users.set(userId, user);
+      console.log(`📝 Created user in in-memory storage: ${userId}`);
       return user;
     }
 
-    // Generate UUID for user ID if not provided
-    if (!userData.id) {
-      userData.id = crypto.randomUUID();
+    try {
+      // Generate UUID for user ID if not provided
+      if (!userData.id) {
+        userData.id = crypto.randomUUID();
+      }
+
+      console.log(`📝 Attempting to create user in Supabase:`, userData);
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([userData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase createUser error:', error);
+        // Fallback to in-memory storage
+        const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+        const user = { id: userId, ...userData };
+        users.set(userId, user);
+        console.log(`📝 Created user in in-memory storage (fallback): ${userId}`);
+        return user;
+      }
+
+      console.log(`✅ Created user in Supabase:`, data);
+      return data;
+    } catch (error) {
+      console.error('Supabase createUser exception:', error);
+      // Fallback to in-memory storage
+      const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+      const user = { id: userId, ...userData };
+      users.set(userId, user);
+      console.log(`📝 Created user in in-memory storage (exception fallback): ${userId}`);
+      return user;
     }
-
-    const { data, error } = await supabase
-      .from('users')
-      .insert([userData])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
   }
 
   static async getUserByEmail(email) {
@@ -289,17 +312,34 @@ class SupabaseService {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
       apiKeys.set(apiKeyData.api_key, apiKeyData);
+      console.log(`🔑 Created API key in in-memory storage: ${apiKeyData.api_key}`);
       return apiKeyData;
     }
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .insert([apiKeyData])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .insert([apiKeyData])
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('Supabase createApiKey error:', error);
+        // Fallback to in-memory storage
+        apiKeys.set(apiKeyData.api_key, apiKeyData);
+        console.log(`🔑 Created API key in in-memory storage (fallback): ${apiKeyData.api_key}`);
+        return apiKeyData;
+      }
+
+      console.log(`✅ Created API key in Supabase:`, data);
+      return data;
+    } catch (error) {
+      console.error('Supabase createApiKey exception:', error);
+      // Fallback to in-memory storage
+      apiKeys.set(apiKeyData.api_key, apiKeyData);
+      console.log(`🔑 Created API key in in-memory storage (exception fallback): ${apiKeyData.api_key}`);
+      return apiKeyData;
+    }
   }
 
   static async getApiKeyByKey(apiKey) {
@@ -350,17 +390,34 @@ class SupabaseService {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
       sessions.set(sessionData.token, sessionData);
+      console.log(`🎫 Created session in in-memory storage: ${sessionData.token}`);
       return sessionData;
     }
 
-    const { data, error } = await supabase
-      .from('sessions')
-      .insert([sessionData])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert([sessionData])
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('Supabase createSession error:', error);
+        // Fallback to in-memory storage
+        sessions.set(sessionData.token, sessionData);
+        console.log(`🎫 Created session in in-memory storage (fallback): ${sessionData.token}`);
+        return sessionData;
+      }
+
+      console.log(`✅ Created session in Supabase:`, data);
+      return data;
+    } catch (error) {
+      console.error('Supabase createSession exception:', error);
+      // Fallback to in-memory storage
+      sessions.set(sessionData.token, sessionData);
+      console.log(`🎫 Created session in in-memory storage (exception fallback): ${sessionData.token}`);
+      return sessionData;
+    }
   }
 
   static async getSession(token) {
@@ -879,13 +936,20 @@ app.post('/api/auth/verify-email', async (req, res) => {
   }
   
   try {
+    console.log(`🔍 Email verification attempt: ${email}, code: ${code}`);
+    
     // Verify the code
     const verification = await verifyEmailCode(email, code);
+    console.log(`🔐 Verification result:`, verification);
+    
     if (!verification.success) {
+      console.log(`❌ Verification failed: ${verification.error}`);
       return res.status(400).json({
         error: verification.error
       });
     }
+    
+    console.log(`✅ Email verification successful for ${email}`);
     
     // Create new user
     const userData = {
@@ -897,7 +961,9 @@ app.post('/api/auth/verify-email', async (req, res) => {
       total_generations: 0
     };
     
+    console.log(`👤 Creating user with data:`, userData);
     const user = await SupabaseService.createUser(userData);
+    console.log(`✅ User created:`, user);
     
     // Create default API key
     const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
@@ -911,7 +977,9 @@ app.post('/api/auth/verify-email', async (req, res) => {
       last_used_at: null
     };
     
+    console.log(`🔑 Creating API key:`, apiKeyData);
     await SupabaseService.createApiKey(apiKeyData);
+    console.log(`✅ API key created: ${apiKey}`);
     
     // Create session token
     const token = crypto.randomUUID();
@@ -921,7 +989,9 @@ app.post('/api/auth/verify-email', async (req, res) => {
       created_at: new Date().toISOString()
     };
     
+    console.log(`🎫 Creating session:`, sessionData);
     await SupabaseService.createSession(sessionData);
+    console.log(`✅ Session created: ${token}`);
     
     res.json({
       token: token,
@@ -930,9 +1000,11 @@ app.post('/api/auth/verify-email', async (req, res) => {
       message: 'Email verified successfully! Account created with 5 free credits.'
     });
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error('❌ Email verification error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
-      error: 'Failed to verify email'
+      error: 'Failed to verify email',
+      details: error.message
     });
   }
 });
