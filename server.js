@@ -13,7 +13,12 @@ const PORT = process.env.PORT || 3000;
 const imageCache = new NodeCache({ stdTTL: 86400 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent']
+}));
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -103,6 +108,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Handle OPTIONS requests for CORS
+app.options('*', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, User-Agent'
+  });
+  res.status(200).end();
+});
+
 // Main route handler for image generation
 app.get('/:dimensions', async (req, res) => {
   try {
@@ -154,11 +169,15 @@ app.get('/:dimensions', async (req, res) => {
       console.log(`Using cached image for prompt: "${prompt}"`);
     }
 
-    // Set appropriate headers
+    // Set appropriate headers for better compatibility
     res.set({
       'Content-Type': 'image/jpeg',
       'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-      'Content-Length': imageBuffer.length
+      'Content-Length': imageBuffer.length,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, User-Agent',
+      'X-Content-Type-Options': 'nosniff'
     });
 
     res.send(imageBuffer);
