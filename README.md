@@ -19,6 +19,8 @@ A service similar to placehold.co but powered by AI image generation using the N
 npm install
 ```
 
+> **Note**: Make sure to set the FAL_KEY environment variable in your deployment platform!
+
 ### 2. Set up API Key
 
 Get your API key from [Nanobanana](https://www.nano-banana.ai) and set it as an environment variable:

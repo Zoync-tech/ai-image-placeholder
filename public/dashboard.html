@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Placeholder - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .user-info h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .credits {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-keys-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .api-key-item {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .api-key-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .api-key-value {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .history-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .history-item {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .history-item.success {
+            border-left: 4px solid #28a745;
+        }
+
+        .history-item.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 AI Image Placeholder</h1>
+            <p>Manage your API keys and track your image generation</p>
+            <button class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
+        </div>
+
+        <div class="content">
+            <!-- Authentication Section -->
+            <div class="auth-section" id="authSection">
+                <h2>Sign In / Sign Up</h2>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button class="btn" onclick="signIn()">Sign In</button>
+                <button class="btn btn-secondary" onclick="signUp()" style="margin-top: 10px;">Sign Up</button>
+                
+                <div class="loading" id="authLoading">
+                    <div class="spinner"></div>
+                    <p>Authenticating...</p>
+                </div>
+                
+                <div class="error" id="authError"></div>
+            </div>
+
+            <!-- User Info Section -->
+            <div class="user-info" id="userInfo">
+                <h3>Welcome!</h3>
+                <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                <p><strong>Credits Remaining:</strong> <span id="userCredits" class="credits"></span></p>
+                <p><strong>Free Tier:</strong> 5 free image generations</p>
+            </div>
+
+            <!-- API Keys Section -->
+            <div class="api-keys-section" id="apiKeysSection" style="display: none;">
+                <h2>Your API Keys</h2>
+                <p>Use these API keys to generate images. Each image generation costs 1 credit.</p>
+                
+                <div class="form-group">
+                    <label for="newApiKeyName">Create New API Key</label>
+                    <input type="text" id="newApiKeyName" placeholder="API Key Name (optional)">
+                    <button class="btn" onclick="createApiKey()" style="margin-top: 10px;">Create API Key</button>
+                </div>
+                
+                <div id="apiKeysList"></div>
+                
+                <div class="loading" id="apiKeysLoading">
+                    <div class="spinner"></div>
+                    <p>Loading API keys...</p>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-section" id="historySection" style="display: none;">
+                <h2>Image Generation History</h2>
+                <div id="historyList"></div>
+                
+                <div class="loading" id="historyLoading">
+                    <div class="spinner"></div>
+                    <p>Loading history...</p>
+                </div>
+            </div>
+
+            <!-- Usage Examples -->
+            <div class="api-keys-section" id="usageExamples" style="display: none;">
+                <h2>Usage Examples</h2>
+                <p>Use your API key in URLs like this:</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <code id="usageExample">https://your-domain.com/600x400.jpg?api_key=YOUR_KEY&text=cat+flying</code>
+                    <button class="copy-btn" onclick="copyUsageExample()">Copy</button>
+                </div>
+                
+                <h3>VRChat Usage:</h3>
+                <p>For VRChat, make sure to use the .jpg extension:</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <code id="vrchatExample">https://your-domain.com/512x512.jpg?api_key=YOUR_KEY&text=anime+character</code>
+                    <button class="copy-btn" onclick="copyVRChatExample()">Copy</button>
+                </div>
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = window.location.origin.replace('localhost', 'localhost:3000');
+        const supabaseAnonKey = 'your-supabase-anon-key'; // This will be set from environment
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        let currentUser = null;
+
+        // Check if user is already logged in
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showUserDashboard();
+            }
+        }
+
+        // Sign in function
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('authError', 'Please enter both email and password');
+                return;
+            }
+
+            showLoading('authLoading');
+            
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            hideLoading('authLoading');
+
+            if (error) {
+                showError('authError', error.message);
+            } else {
+                currentUser = data.user;
+                showUserDashboard();
+            }
+        }
+
+        // Sign up function
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('authError', 'Please enter both email and password');
+                return;
+            }
+
+            showLoading('authLoading');
+            
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            hideLoading('authLoading');
+
+            if (error) {
+                showError('authError', error.message);
+            } else {
+                showSuccess('Check your email for a confirmation link!');
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            showAuthSection();
+        }
+
+        // Show user dashboard
+        async function showUserDashboard() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('apiKeysSection').style.display = 'block';
+            document.getElementById('historySection').style.display = 'block';
+            document.getElementById('usageExamples').style.display = 'block';
+            document.querySelector('.logout-btn').style.display = 'block';
+
+            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            // Load user data
+            await loadUserData();
+            await loadApiKeys();
+            await loadHistory();
+        }
+
+        // Show auth section
+        function showAuthSection() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('apiKeysSection').style.display = 'none';
+            document.getElementById('historySection').style.display = 'none';
+            document.getElementById('usageExamples').style.display = 'none';
+            document.querySelector('.logout-btn').style.display = 'none';
+        }
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const profile = await response.json();
+                    document.getElementById('userCredits').textContent = profile.credits;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Load API keys
+        async function loadApiKeys() {
+            showLoading('apiKeysLoading');
+            
+            try {
+                const response = await fetch('/api/user/api-keys', {
+                    headers: {
+                        'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const apiKeys = await response.json();
+                    displayApiKeys(apiKeys);
+                }
+            } catch (error) {
+                console.error('Error loading API keys:', error);
+            }
+            
+            hideLoading('apiKeysLoading');
+        }
+
+        // Display API keys
+        function displayApiKeys(apiKeys) {
+            const container = document.getElementById('apiKeysList');
+            container.innerHTML = '';
+            
+            if (apiKeys.length === 0) {
+                container.innerHTML = '<p>No API keys found. Create one above!</p>';
+                return;
+            }
+            
+            apiKeys.forEach(key => {
+                const keyDiv = document.createElement('div');
+                keyDiv.className = 'api-key-item';
+                keyDiv.innerHTML = `
+                    <h4>${key.name}</h4>
+                    <div class="api-key-value">${key.api_key}</div>
+                    <p><strong>Created:</strong> ${new Date(key.created_at).toLocaleDateString()}</p>
+                    <p><strong>Last Used:</strong> ${key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}</p>
+                    <p><strong>Total Requests:</strong> ${key.total_requests}</p>
+                    <button class="copy-btn" onclick="copyApiKey('${key.api_key}')">Copy</button>
+                    <button class="delete-btn" onclick="deleteApiKey('${key.id}')">Delete</button>
+                `;
+                container.appendChild(keyDiv);
+            });
+        }
+
+        // Create new API key
+        async function createApiKey() {
+            const name = document.getElementById('newApiKeyName').value || 'New API Key';
+            
+            try {
+                const response = await fetch('/api/user/api-keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                if (response.ok) {
+                    showSuccess('API key created successfully!');
+                    document.getElementById('newApiKeyName').value = '';
+                    await loadApiKeys();
+                } else {
+                    const error = await response.json();
+                    showError('errorMessage', error.error || 'Failed to create API key');
+                }
+            } catch (error) {
+                showError('errorMessage', 'Failed to create API key');
+            }
+        }
+
+        // Copy API key
+        function copyApiKey(apiKey) {
+            navigator.clipboard.writeText(apiKey);
+            showSuccess('API key copied to clipboard!');
+        }
+
+        // Load history
+        async function loadHistory() {
+            showLoading('historyLoading');
+            
+            try {
+                const response = await fetch('/api/user/history', {
+                    headers: {
+                        'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const history = await response.json();
+                    displayHistory(history);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+            
+            hideLoading('historyLoading');
+        }
+
+        // Display history
+        function displayHistory(history) {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p>No image generations yet. Create your first image!</p>';
+                return;
+            }
+            
+            history.forEach(item => {
+                const historyDiv = document.createElement('div');
+                historyDiv.className = `history-item ${item.success ? 'success' : 'error'}`;
+                historyDiv.innerHTML = `
+                    <p><strong>Prompt:</strong> ${item.prompt}</p>
+                    <p><strong>Dimensions:</strong> ${item.dimensions}</p>
+                    <p><strong>Status:</strong> ${item.success ? 'Success' : 'Failed'}</p>
+                    <p><strong>Date:</strong> ${new Date(item.created_at).toLocaleString()}</p>
+                    ${item.error_message ? `<p><strong>Error:</strong> ${item.error_message}</p>` : ''}
+                `;
+                container.appendChild(historyDiv);
+            });
+        }
+
+        // Utility functions
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const element = document.getElementById('successMessage');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function copyUsageExample() {
+            const example = document.getElementById('usageExample').textContent;
+            navigator.clipboard.writeText(example);
+            showSuccess('Usage example copied to clipboard!');
+        }
+
+        function copyVRChatExample() {
+            const example = document.getElementById('vrchatExample').textContent;
+            navigator.clipboard.writeText(example);
+            showSuccess('VRChat example copied to clipboard!');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
