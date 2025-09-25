@@ -1,4 +1,5 @@
--- Note: auth.users table is managed by Supabase and has RLS enabled by default
+-- Simplified database schema for AI Image Placeholder
+-- Run this in your Supabase SQL Editor
 
 -- Create profiles table (extends auth.users)
 CREATE TABLE public.profiles (
@@ -42,6 +43,11 @@ CREATE INDEX idx_api_keys_user_id ON public.api_keys(user_id);
 CREATE INDEX idx_image_generations_user_id ON public.image_generations(user_id);
 CREATE INDEX idx_image_generations_created_at ON public.image_generations(created_at);
 
+-- Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.image_generations ENABLE ROW LEVEL SECURITY;
+
 -- Row Level Security Policies
 
 -- Profiles: Users can only see and update their own profile
@@ -74,24 +80,6 @@ CREATE POLICY "Users can view own image generations" ON public.image_generations
 CREATE POLICY "Users can insert own image generations" ON public.image_generations
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Function to automatically create profile when user signs up
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
-  
-  -- Create default API key for new user
-  INSERT INTO public.api_keys (user_id, api_key)
-  VALUES (NEW.id, gen_random_uuid()::text || '-' || substr(md5(random()::text), 1, 8));
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Note: The trigger on auth.users will be created via Supabase's dashboard or CLI
--- For now, we'll handle user creation manually in the application
-
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -105,3 +93,9 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Grant necessary permissions
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON public.profiles TO anon, authenticated;
+GRANT ALL ON public.api_keys TO anon, authenticated;
+GRANT ALL ON public.image_generations TO anon, authenticated;

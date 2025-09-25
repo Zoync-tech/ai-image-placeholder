@@ -18,6 +18,51 @@ const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 // Utility functions for database operations
 class SupabaseService {
   
+  // Create user profile and API key when user signs up
+  static async createUserProfile(user) {
+    try {
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || null
+        });
+      
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw new Error('Failed to create user profile');
+      }
+      
+      // Create default API key
+      const apiKey = await this.generateApiKey(user.id, 'Default API Key');
+      
+      return apiKey;
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      throw error;
+    }
+  }
+  
+  // Get or create user profile
+  static async getOrCreateUserProfile(user) {
+    try {
+      let profile = await this.getUserProfile(user.id);
+      
+      if (!profile) {
+        // Create profile if it doesn't exist
+        await this.createUserProfile(user);
+        profile = await this.getUserProfile(user.id);
+      }
+      
+      return profile;
+    } catch (error) {
+      console.error('Error getting/creating user profile:', error);
+      throw error;
+    }
+  }
+  
   // Generate a new API key for user
   static async generateApiKey(userId, name = 'Default API Key') {
     const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;

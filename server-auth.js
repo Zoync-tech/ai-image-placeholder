@@ -132,7 +132,7 @@ app.get('/api/user/profile', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const profile = await SupabaseService.getUserProfile(user.id);
+    const profile = await SupabaseService.getOrCreateUserProfile(user);
     res.json(profile);
   } catch (error) {
     console.error('Error getting user profile:', error);
