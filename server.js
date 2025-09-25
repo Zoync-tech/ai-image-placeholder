@@ -1245,6 +1245,64 @@ app.get('/api/user/profile', validateSession, async (req, res) => {
   }
 });
 
+// User API keys endpoint
+app.get('/api/user/api-keys', validateSession, async (req, res) => {
+  try {
+    console.log(`🔑 Getting API keys for user: ${req.userId}`);
+    
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const userApiKeys = Array.from(apiKeys.entries())
+        .filter(([key, value]) => value.user_id === req.userId)
+        .map(([key, value]) => ({
+          id: key,
+          api_key: key,
+          name: value.name,
+          is_active: value.is_active,
+          created_at: value.created_at,
+          total_requests: value.total_requests,
+          last_used_at: value.last_used_at
+        }));
+      
+      return res.json({ api_keys: userApiKeys });
+    }
+
+    // Get API keys from Supabase
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching API keys:', error);
+      // Fallback to in-memory storage
+      const userApiKeys = Array.from(apiKeys.entries())
+        .filter(([key, value]) => value.user_id === req.userId)
+        .map(([key, value]) => ({
+          id: key,
+          api_key: key,
+          name: value.name,
+          is_active: value.is_active,
+          created_at: value.created_at,
+          total_requests: value.total_requests,
+          last_used_at: value.last_used_at
+        }));
+      
+      return res.json({ api_keys: userApiKeys });
+    }
+
+    console.log(`✅ Found ${data.length} API keys for user`);
+    res.json({ api_keys: data });
+  } catch (error) {
+    console.error('❌ Get API keys error:', error);
+    res.status(500).json({
+      error: 'Failed to get API keys',
+      details: error.message
+    });
+  }
+});
+
 // API Routes for user management
 app.get('/api/info', (req, res) => {
   const { api_key } = req.query;
@@ -1278,10 +1336,40 @@ app.get('/api/info', (req, res) => {
 // Create new API key endpoint
 app.post('/api/create-key', validateSession, async (req, res) => {
   try {
-    const { name = 'New API Key' } = req.body;
+    const { name = 'My API Key' } = req.body;
     const userId = req.userId;
     
     console.log(`🔑 Creating API key for user: ${userId}`);
+    
+    // Check if user already has an API key
+    if (!isSupabaseConfigured) {
+      // Check in-memory storage
+      const existingKeys = Array.from(apiKeys.entries())
+        .filter(([key, value]) => value.user_id === userId);
+      
+      if (existingKeys.length > 0) {
+        return res.status(400).json({
+          error: 'You already have an API key',
+          message: 'Each user can only have one API key'
+        });
+      }
+    } else {
+      // Check Supabase
+      const { data: existingKeys, error } = await supabase
+        .from('api_keys')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('❌ Error checking existing API keys:', error);
+      } else if (existingKeys && existingKeys.length > 0) {
+        return res.status(400).json({
+          error: 'You already have an API key',
+          message: 'Each user can only have one API key',
+          existing_api_key: existingKeys[0].api_key
+        });
+      }
+    }
     
     const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
     const apiKeyData = {
