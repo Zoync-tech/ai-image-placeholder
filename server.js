@@ -7,6 +7,7 @@ const path = require('path');
 const { fal } = require('@fal-ai/client');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,11 +15,26 @@ const PORT = process.env.PORT || 3000;
 // Cache for generated images (24 hour TTL)
 const imageCache = new NodeCache({ stdTTL: 86400 });
 
-// Simple in-memory storage for users and API keys (in production, use a database)
+// Supabase configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check if Supabase is configured
+const isSupabaseConfigured = supabaseUrl && supabaseServiceKey;
+
+if (!isSupabaseConfigured) {
+  console.warn('⚠️  Supabase environment variables not set. Using in-memory storage (data will be lost on restart).');
+  console.warn('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to enable persistent storage.');
+}
+
+// Create Supabase client (with fallback for missing config)
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
+// Fallback in-memory storage (only used if Supabase not configured)
 const users = new Map();
 const apiKeys = new Map();
-const sessions = new Map(); // For user sessions
-const emailVerifications = new Map(); // For email verification codes
+const sessions = new Map();
+const emailVerifications = new Map();
 
 // Initialize with a default user for testing
 const defaultUserId = 'user_' + crypto.randomUUID().substring(0, 8);
@@ -132,13 +148,13 @@ async function resizeImage(imageBuffer, width, height) {
 }
 
 // API Key validation
-function validateApiKey(apiKey) {
-  const keyData = apiKeys.get(apiKey);
+async function validateApiKey(apiKey) {
+  const keyData = await SupabaseService.getApiKeyByKey(apiKey);
   if (!keyData || !keyData.is_active) {
     return null;
   }
   
-  const user = users.get(keyData.user_id);
+  const user = await SupabaseService.getUserByEmail(keyData.user_id);
   if (!user) {
     return null;
   }
@@ -147,8 +163,8 @@ function validateApiKey(apiKey) {
 }
 
 // Deduct credits
-function deductCredits(userId, credits = 1) {
-  const user = users.get(userId);
+async function deductCredits(userId, credits = 1) {
+  const user = await SupabaseService.getUserByEmail(userId);
   if (!user) {
     throw new Error('User not found');
   }
@@ -157,21 +173,15 @@ function deductCredits(userId, credits = 1) {
     throw new Error('Insufficient credits');
   }
   
-  user.credits -= credits;
-  user.total_generations += 1;
-  users.set(userId, user);
+  const newCredits = user.credits - credits;
+  await SupabaseService.updateUserCredits(userId, newCredits);
   
-  return user.credits;
+  return newCredits;
 }
 
 // Update API key stats
-function updateApiKeyStats(apiKeyId) {
-  const keyData = apiKeys.get(apiKeyId);
-  if (keyData) {
-    keyData.total_requests += 1;
-    keyData.last_used_at = new Date().toISOString();
-    apiKeys.set(apiKeyId, keyData);
-  }
+async function updateApiKeyStats(apiKey) {
+  await SupabaseService.updateApiKeyUsage(apiKey);
 }
 
 // Generate email verification code
@@ -181,6 +191,221 @@ function generateVerificationCode() {
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY || 're_2hjEnGgj_FRr1Zi3CBZEDMmv5PXsYuvnZ');
+
+// Supabase Database Functions
+class SupabaseService {
+  // User Management
+  static async createUser(userData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+      const user = { id: userId, ...userData };
+      users.set(userId, user);
+      return user;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .insert([userData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getUserByEmail(email) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      return Array.from(users.values()).find(user => user.email === email) || null;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+    return data;
+  }
+
+  static async updateUserCredits(userId, credits) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const user = users.get(userId);
+      if (user) {
+        user.credits = credits;
+        users.set(userId, user);
+      }
+      return user;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ credits: credits })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // API Key Management
+  static async createApiKey(apiKeyData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      apiKeys.set(apiKeyData.api_key, apiKeyData);
+      return apiKeyData;
+    }
+
+    const { data, error } = await supabase
+      .from('api_keys')
+      .insert([apiKeyData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getApiKeyByKey(apiKey) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      return apiKeys.get(apiKey) || null;
+    }
+
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('api_key', apiKey)
+      .eq('is_active', true)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  }
+
+  static async updateApiKeyUsage(apiKey) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const keyData = apiKeys.get(apiKey);
+      if (keyData) {
+        keyData.total_requests += 1;
+        keyData.last_used_at = new Date().toISOString();
+        apiKeys.set(apiKey, keyData);
+      }
+      return keyData;
+    }
+
+    const { data, error } = await supabase
+      .from('api_keys')
+      .update({ 
+        total_requests: supabase.raw('total_requests + 1'),
+        last_used_at: new Date().toISOString()
+      })
+      .eq('api_key', apiKey)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Session Management
+  static async createSession(sessionData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      sessions.set(sessionData.token, sessionData);
+      return sessionData;
+    }
+
+    const { data, error } = await supabase
+      .from('sessions')
+      .insert([sessionData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getSession(token) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      return sessions.get(token) || null;
+    }
+
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  }
+
+  // Email Verification
+  static async storeEmailVerification(email, verificationData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      emailVerifications.set(email, verificationData);
+      return verificationData;
+    }
+
+    // Delete any existing verification for this email
+    await supabase
+      .from('email_verifications')
+      .delete()
+      .eq('email', email);
+
+    const { data, error } = await supabase
+      .from('email_verifications')
+      .insert([{
+        email: email,
+        ...verificationData
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getEmailVerification(email) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      return emailVerifications.get(email) || null;
+    }
+
+    const { data, error } = await supabase
+      .from('email_verifications')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  }
+
+  static async deleteEmailVerification(email) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      emailVerifications.delete(email);
+      return true;
+    }
+
+    const { error } = await supabase
+      .from('email_verifications')
+      .delete()
+      .eq('email', email);
+
+    if (error) throw error;
+    return true;
+  }
+}
 
 // Send verification email using Resend
 async function sendVerificationEmail(email, code) {
@@ -279,8 +504,8 @@ async function sendVerificationEmail(email, code) {
 }
 
 // Verify email code
-function verifyEmailCode(email, code) {
-  const verification = emailVerifications.get(email);
+async function verifyEmailCode(email, code) {
+  const verification = await SupabaseService.getEmailVerification(email);
   if (!verification) {
     return { success: false, error: 'No verification code found' };
   }
@@ -291,7 +516,7 @@ function verifyEmailCode(email, code) {
   expirationTime.setMinutes(expirationTime.getMinutes() + 10);
   
   if (now > expirationTime) {
-    emailVerifications.delete(email);
+    await SupabaseService.deleteEmailVerification(email);
     return { success: false, error: 'Verification code expired' };
   }
   
@@ -299,9 +524,9 @@ function verifyEmailCode(email, code) {
     return { success: false, error: 'Invalid verification code' };
   }
   
-  // Code is valid, mark email as verified
-  emailVerifications.delete(email);
-  return { success: true };
+  // Code is valid, delete verification record
+  await SupabaseService.deleteEmailVerification(email);
+  return { success: true, name: verification.name };
 }
 
 // Health check endpoint
@@ -337,7 +562,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // Authentication endpoints
-app.post('/api/auth/signup', (req, res) => {
+app.post('/api/auth/signup', async (req, res) => {
   const { email, name } = req.body;
   
   if (!email || !name) {
@@ -346,36 +571,43 @@ app.post('/api/auth/signup', (req, res) => {
     });
   }
   
-  // Check if user already exists
-  const existingUser = Array.from(users.values()).find(user => user.email === email);
-  if (existingUser) {
-    return res.status(400).json({
-      error: 'User with this email already exists'
+  try {
+    // Check if user already exists
+    const existingUser = await SupabaseService.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        error: 'User with this email already exists'
+      });
+    }
+    
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+    
+    // Store verification code
+    await SupabaseService.storeEmailVerification(email, {
+      code: verificationCode,
+      name: name,
+      created_at: new Date().toISOString()
+    });
+    
+    // Send verification email
+    await sendVerificationEmail(email, verificationCode);
+    
+    res.json({
+      message: 'Please check your email for verification code',
+      email: email,
+      requires_verification: true
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({
+      error: 'Failed to process signup'
     });
   }
-  
-  // Generate verification code
-  const verificationCode = generateVerificationCode();
-  
-  // Store verification code
-  emailVerifications.set(email, {
-    code: verificationCode,
-    name: name,
-    created_at: new Date().toISOString()
-  });
-  
-  // Send verification email
-  sendVerificationEmail(email, verificationCode);
-  
-  res.json({
-    message: 'Please check your email for verification code',
-    email: email,
-    requires_verification: true
-  });
 });
 
 // Email verification endpoint
-app.post('/api/auth/verify-email', (req, res) => {
+app.post('/api/auth/verify-email', async (req, res) => {
   const { email, code } = req.body;
   
   if (!email || !code) {
@@ -384,59 +616,65 @@ app.post('/api/auth/verify-email', (req, res) => {
     });
   }
   
-  // Verify the code
-  const verification = verifyEmailCode(email, code);
-  if (!verification.success) {
-    return res.status(400).json({
-      error: verification.error
+  try {
+    // Verify the code
+    const verification = await verifyEmailCode(email, code);
+    if (!verification.success) {
+      return res.status(400).json({
+        error: verification.error
+      });
+    }
+    
+    // Create new user
+    const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+    const userData = {
+      id: userId,
+      email: email,
+      name: verification.name,
+      email_verified: true,
+      credits: 5, // 5 free credits
+      created_at: new Date().toISOString(),
+      total_generations: 0
+    };
+    
+    const user = await SupabaseService.createUser(userData);
+    
+    // Create default API key
+    const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+    const apiKeyData = {
+      api_key: apiKey,
+      user_id: userId,
+      name: 'Default API Key',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      total_requests: 0,
+      last_used_at: null
+    };
+    
+    await SupabaseService.createApiKey(apiKeyData);
+    
+    // Create session token
+    const token = crypto.randomUUID();
+    const sessionData = {
+      token: token,
+      user_id: userId,
+      created_at: new Date().toISOString()
+    };
+    
+    await SupabaseService.createSession(sessionData);
+    
+    res.json({
+      token: token,
+      user: user,
+      api_key: apiKey,
+      message: 'Email verified successfully! Account created with 5 free credits.'
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({
+      error: 'Failed to verify email'
     });
   }
-  
-  // Get user data from verification
-  const verificationData = emailVerifications.get(email);
-  const name = verificationData ? verificationData.name : 'User';
-  
-  // Create new user
-  const userId = 'user_' + crypto.randomUUID().substring(0, 8);
-  const user = {
-    id: userId,
-    email: email,
-    name: name,
-    email_verified: true,
-    credits: 5, // 5 free credits
-    created_at: new Date().toISOString(),
-    total_generations: 0
-  };
-  
-  users.set(userId, user);
-  
-  // Create default API key
-  const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
-  const apiKeyData = {
-    id: apiKey,
-    user_id: userId,
-    name: 'Default API Key',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    total_requests: 0,
-    last_used_at: null
-  };
-  
-  apiKeys.set(apiKey, apiKeyData);
-  
-  // Create session token
-  const token = crypto.randomUUID();
-  sessions.set(token, {
-    user_id: userId,
-    created_at: new Date().toISOString()
-  });
-  
-  res.json({
-    token: token,
-    user: user,
-    api_key: apiKey,
-    message: 'Email verified successfully! Account created with 5 free credits.'
-  });
 });
 
 // Resend verification code endpoint
