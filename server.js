@@ -272,17 +272,28 @@ class SupabaseService {
   static async getUserById(userId) {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
+      console.log(`📋 Using in-memory storage for getUserById: ${userId}`);
       return users.get(userId) || null;
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
-    return data;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase getUserById error:', error);
+        // Fallback to in-memory storage
+        return users.get(userId) || null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Supabase getUserById exception:', error);
+      // Fallback to in-memory storage
+      return users.get(userId) || null;
+    }
   }
 
   static async updateUserCredits(userId, credits) {
@@ -423,17 +434,28 @@ class SupabaseService {
   static async getSession(token) {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
+      console.log(`📋 Using in-memory storage for getSession: ${token}`);
       return sessions.get(token) || null;
     }
 
-    const { data, error } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('token', token)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('token', token)
+        .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase getSession error:', error);
+        // Fallback to in-memory storage
+        return sessions.get(token) || null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Supabase getSession exception:', error);
+      // Fallback to in-memory storage
+      return sessions.get(token) || null;
+    }
   }
 
   // Email Verification
@@ -690,8 +712,49 @@ app.get('/health', (req, res) => {
     total_api_keys: apiKeys.size,
     demo_api_key: defaultApiKey,
     resend_configured: !!process.env.RESEND_API_KEY,
-    supabase_configured: isSupabaseConfigured
+    supabase_configured: isSupabaseConfigured,
+    supabase_url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    supabase_service_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET'
   });
+});
+
+// Supabase status endpoint
+app.get('/api/supabase-status', async (req, res) => {
+  try {
+    const status = {
+      configured: isSupabaseConfigured,
+      url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+      service_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET',
+      timestamp: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured) {
+      // Test Supabase connection
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
+        
+        if (error) {
+          status.connection = 'FAILED';
+          status.error = error.message;
+        } else {
+          status.connection = 'SUCCESS';
+        }
+      } catch (error) {
+        status.connection = 'FAILED';
+        status.error = error.message;
+      }
+    }
+
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to check Supabase status',
+      details: error.message
+    });
+  }
 });
 
 // Debug verification endpoint
@@ -1085,36 +1148,55 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // Middleware to validate session token
-function validateSession(req, res, next) {
+async function validateSession(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  
+
   if (!token) {
     return res.status(401).json({
       error: 'No token provided'
     });
   }
-  
-  const session = sessions.get(token);
-  if (!session) {
+
+  try {
+    const session = await SupabaseService.getSession(token);
+    if (!session) {
+      return res.status(401).json({
+        error: 'Invalid or expired token'
+      });
+    }
+
+    req.userId = session.user_id;
+    next();
+  } catch (error) {
+    console.error('Session validation error:', error);
     return res.status(401).json({
-      error: 'Invalid or expired token'
+      error: 'Session validation failed'
     });
   }
-  
-  req.userId = session.user_id;
-  next();
 }
 
 // User profile endpoint
-app.get('/api/user/profile', validateSession, (req, res) => {
-  const user = users.get(req.userId);
-  if (!user) {
-    return res.status(404).json({
-      error: 'User not found'
+app.get('/api/user/profile', validateSession, async (req, res) => {
+  try {
+    console.log(`👤 Getting profile for user: ${req.userId}`);
+    
+    const user = await SupabaseService.getUserById(req.userId);
+    if (!user) {
+      console.log(`❌ User not found: ${req.userId}`);
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    console.log(`✅ Found user profile:`, user);
+    res.json(user);
+  } catch (error) {
+    console.error('❌ Get profile error:', error);
+    res.status(500).json({
+      error: 'Failed to get user profile',
+      details: error.message
     });
   }
-  
-  res.json(user);
 });
 
 // API Routes for user management
