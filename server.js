@@ -118,7 +118,105 @@ app.options('*', (req, res) => {
   res.status(200).end();
 });
 
-// Main route handler for image generation
+// Main route handler for image generation (with .jpg extension for VRChat)
+app.get('/:dimensions.jpg', async (req, res) => {
+  try {
+    const { dimensions } = req.params;
+    const { text } = req.query;
+    
+    // Parse dimensions (e.g., "600x400")
+    const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
+    if (!dimensionMatch) {
+      return res.status(400).send('Invalid dimensions format. Use: widthxheight (e.g., 600x400)');
+    }
+
+    const width = parseInt(dimensionMatch[1]);
+    const height = parseInt(dimensionMatch[2]);
+
+    // Validate dimensions
+    if (width < 1 || height < 1 || width > 4096 || height > 4096) {
+      return res.status(400).send('Dimensions must be between 1x1 and 4096x4096');
+    }
+
+    // Use text prompt or default
+    const prompt = text || 'abstract art, colorful, modern design';
+
+    // Create cache key
+    const cacheKey = `${width}x${height}_${prompt}`;
+
+    // Check cache first
+    let imageBuffer = imageCache.get(cacheKey);
+    
+    if (!imageBuffer) {
+      console.log(`Generating new image for prompt: "${prompt}"`);
+      
+      try {
+        // Generate image using available APIs
+        imageBuffer = await generateImage(prompt, width, height);
+
+        // Resize if needed (in case API doesn't respect exact dimensions)
+        if (imageBuffer && imageBuffer.length > 0) {
+          imageBuffer = await resizeImage(imageBuffer, width, height);
+          
+          // Cache the result
+          imageCache.set(cacheKey, imageBuffer);
+        }
+      } catch (error) {
+        console.log('Image generation failed, will use fallback SVG');
+        throw error; // This will trigger the fallback SVG generation
+      }
+    } else {
+      console.log(`Using cached image for prompt: "${prompt}"`);
+    }
+
+    // Set appropriate headers for better compatibility
+    res.set({
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+      'Content-Length': imageBuffer.length,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, User-Agent',
+      'X-Content-Type-Options': 'nosniff'
+    });
+
+    res.send(imageBuffer);
+
+  } catch (error) {
+    console.error('Error generating image:', error);
+    
+    // Fallback: Generate a simple placeholder image
+    const { dimensions } = req.params;
+    const { text } = req.query;
+    
+    const dimensionMatch = dimensions.match(/^(\d+)x(\d+)$/);
+    if (dimensionMatch) {
+      const width = parseInt(dimensionMatch[1]);
+      const height = parseInt(dimensionMatch[2]);
+      
+      // Create a simple SVG placeholder
+      const svg = `
+        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#f0f0f0"/>
+          <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" 
+                text-anchor="middle" dy=".3em" fill="#666">
+            ${text || 'AI Image Placeholder'}
+          </text>
+        </svg>
+      `;
+      
+      res.set({
+        'Content-Type': 'image/svg+xml',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.send(svg);
+    } else {
+      res.status(500).send('Internal Server Error');
+    }
+  }
+});
+
+// Fallback route handler for image generation (without .jpg extension)
 app.get('/:dimensions', async (req, res) => {
   try {
     const { dimensions } = req.params;
