@@ -435,7 +435,7 @@ async function sendVerificationEmail(email, code) {
     console.log(`📧 Sending verification email to ${email} via Resend`);
     
     const { data, error } = await resend.emails.send({
-      from: 'AI Image Placeholder <onboarding@resend.dev>', // Using Resend's default domain for immediate functionality
+      from: 'AI Image Placeholder <noreply@zoync.com>', // Using your verified zoync.com domain
       to: [email],
       subject: 'Verify Your Email - AI Image Placeholder',
       html: `
@@ -580,7 +580,7 @@ app.post('/api/test-email', async (req, res) => {
     console.log(`🧪 Testing email to ${email}`);
     
     const { data, error } = await resend.emails.send({
-      from: 'AI Image Placeholder <onboarding@resend.dev>',
+      from: 'AI Image Placeholder <noreply@zoync.com>',
       to: [email],
       subject: 'Test Email - AI Image Placeholder',
       html: `
@@ -649,9 +649,12 @@ app.post('/api/auth/signup', async (req, res) => {
   }
   
   try {
+    console.log(`📝 Signup attempt for email: ${email}, name: ${name}`);
+    
     // Check if user already exists
     const existingUser = await SupabaseService.getUserByEmail(email);
     if (existingUser) {
+      console.log(`❌ User already exists: ${email}`);
       return res.status(400).json({
         error: 'User with this email already exists'
       });
@@ -659,6 +662,7 @@ app.post('/api/auth/signup', async (req, res) => {
     
     // Generate verification code
     const verificationCode = generateVerificationCode();
+    console.log(`🔐 Generated verification code for ${email}: ${verificationCode}`);
     
     // Store verification code
     await SupabaseService.storeEmailVerification(email, {
@@ -666,9 +670,11 @@ app.post('/api/auth/signup', async (req, res) => {
       name: name,
       created_at: new Date().toISOString()
     });
+    console.log(`💾 Stored verification code for ${email}`);
     
     // Send verification email
-    await sendVerificationEmail(email, verificationCode);
+    const emailSent = await sendVerificationEmail(email, verificationCode);
+    console.log(`📧 Email send result for ${email}: ${emailSent}`);
     
     res.json({
       message: 'Please check your email for verification code',
@@ -676,9 +682,11 @@ app.post('/api/auth/signup', async (req, res) => {
       requires_verification: true
     });
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('❌ Signup error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
-      error: 'Failed to process signup'
+      error: 'Failed to process signup',
+      details: error.message
     });
   }
 });
