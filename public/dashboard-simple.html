@@ -237,6 +237,16 @@
         </div>
 
         <div class="content">
+            <!-- User Info Section -->
+            <div class="user-info" id="userInfo" style="display: none;">
+                <h3>👤 User Information</h3>
+                <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                <p><strong>Credits Remaining:</strong> <span id="userCredits" class="credits"></span></p>
+                <p><strong>Total Generations:</strong> <span id="totalGenerations"></span></p>
+                <p><strong>Account Created:</strong> <span id="accountCreated"></span></p>
+                <button class="btn btn-secondary" onclick="logout()" style="margin-top: 15px;">Logout</button>
+            </div>
+
             <!-- Demo API Key Section -->
             <div class="demo-section">
                 <h3>🚀 Quick Start - Demo API Key</h3>
@@ -350,7 +360,46 @@
         // Load demo API key on page load
         window.addEventListener('DOMContentLoaded', async () => {
             await loadDemoApiKey();
+            await checkAuthStatus();
         });
+
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('userToken');
+            const email = localStorage.getItem('userEmail');
+            
+            if (token && email) {
+                // User is logged in, show user info
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userEmail').textContent = email;
+                
+                // Load user data
+                try {
+                    const response = await fetch('/api/user/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const userData = await response.json();
+                        document.getElementById('userCredits').textContent = userData.credits || 0;
+                        document.getElementById('totalGenerations').textContent = userData.total_generations || 0;
+                        document.getElementById('accountCreated').textContent = new Date(userData.created_at).toLocaleDateString();
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                }
+            } else {
+                // User not logged in, redirect to auth page
+                window.location.href = '/auth.html';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            window.location.href = '/auth.html';
+        }
 
         async function loadDemoApiKey() {
             try {
@@ -376,6 +425,12 @@
 
         async function createApiKey() {
             const name = document.getElementById('apiKeyName').value || 'New API Key';
+            const token = localStorage.getItem('userToken');
+            
+            if (!token) {
+                showError('errorMessage', 'Please login first');
+                return;
+            }
             
             showLoading('createLoading');
             hideMessages();
@@ -384,14 +439,15 @@
                 const response = await fetch('/api/create-key', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ name })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showSuccess(`API key created successfully! You have ${data.credits} free credits.`);
+                    showSuccess(`API key created successfully! You have ${data.credits} credits remaining.`);
                     
                     // Display the new API key
                     const newKeyHtml = `
@@ -405,6 +461,9 @@
                     
                     // Clear the input
                     document.getElementById('apiKeyName').value = '';
+                    
+                    // Refresh user info
+                    await checkAuthStatus();
                 } else {
                     const error = await response.json();
                     showError('errorMessage', error.error || 'Failed to create API key');

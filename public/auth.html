@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Placeholder - Login / Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .demo-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .demo-section p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .api-key-display {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .benefits {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .benefits h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .benefits ul {
+            margin-left: 20px;
+        }
+
+        .benefits li {
+            margin-bottom: 5px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 AI Image Placeholder</h1>
+            <p>Sign in to manage your API keys and credits</p>
+        </div>
+
+        <div class="content">
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('login')">Sign In</div>
+                <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+            </div>
+
+            <!-- Login Tab -->
+            <div id="login" class="tab-content active">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                    </div>
+                    
+                    <button type="submit" class="btn">Sign In</button>
+                    
+                    <div class="loading" id="loginLoading">
+                        <div class="spinner"></div>
+                        <p>Signing in...</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sign Up Tab -->
+            <div id="signup" class="tab-content">
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe" required>
+                    </div>
+                    
+                    <button type="submit" class="btn">Create Account</button>
+                    
+                    <div class="loading" id="signupLoading">
+                        <div class="spinner"></div>
+                        <p>Creating account...</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Demo Section -->
+            <div class="demo-section">
+                <h3>🚀 Try Demo API Key</h3>
+                <p>Use this demo key to test the service immediately:</p>
+                <div class="api-key-display" id="demoApiKey">
+                    Loading demo API key...
+                </div>
+                <button class="copy-btn" onclick="copyDemoApiKey()">Copy Demo API Key</button>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="benefits">
+                <h3>✨ What You Get</h3>
+                <ul>
+                    <li><strong>5 Free Credits</strong> - Generate 5 AI images for free</li>
+                    <li><strong>Personal API Keys</strong> - Secure access to the service</li>
+                    <li><strong>Usage Tracking</strong> - Monitor your image generation history</li>
+                    <li><strong>VRChat Compatible</strong> - Perfect for VRChat image URLs</li>
+                    <li><strong>Future Plans</strong> - Access to premium features and more credits</li>
+                </ul>
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let demoApiKey = '';
+
+        // Load demo API key on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadDemoApiKey();
+        });
+
+        async function loadDemoApiKey() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                demoApiKey = data.demo_api_key || 'ai_demo123456789';
+                document.getElementById('demoApiKey').textContent = demoApiKey;
+            } catch (error) {
+                console.error('Error loading demo API key:', error);
+                document.getElementById('demoApiKey').textContent = 'Error loading demo key';
+            }
+        }
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            hideMessages();
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            
+            showLoading('loginLoading');
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('userToken', data.token);
+                    localStorage.setItem('userEmail', email);
+                    showSuccess('Login successful! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    showError('errorMessage', error.error || 'Login failed');
+                }
+            } catch (error) {
+                showError('errorMessage', 'Login failed. Please try again.');
+            }
+            
+            hideLoading('loginLoading');
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const name = document.getElementById('signupName').value;
+            
+            showLoading('signupLoading');
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, name })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('userToken', data.token);
+                    localStorage.setItem('userEmail', email);
+                    showSuccess('Account created successfully! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    showError('errorMessage', error.error || 'Signup failed');
+                }
+            } catch (error) {
+                showError('errorMessage', 'Signup failed. Please try again.');
+            }
+            
+            hideLoading('signupLoading');
+        });
+
+        function copyDemoApiKey() {
+            navigator.clipboard.writeText(demoApiKey);
+            showSuccess('Demo API key copied to clipboard!');
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const element = document.getElementById('successMessage');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

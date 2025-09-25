@@ -16,6 +16,7 @@ const imageCache = new NodeCache({ stdTTL: 86400 });
 // Simple in-memory storage for users and API keys (in production, use a database)
 const users = new Map();
 const apiKeys = new Map();
+const sessions = new Map(); // For user sessions
 
 // Initialize with a default user for testing
 const defaultUserId = 'user_' + crypto.randomUUID().substring(0, 8);
@@ -24,6 +25,7 @@ const defaultApiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0,
 users.set(defaultUserId, {
   id: defaultUserId,
   email: 'demo@example.com',
+  name: 'Demo User',
   credits: 5,
   created_at: new Date().toISOString(),
   total_generations: 0
@@ -187,9 +189,138 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Serve auth page
+app.get('/auth', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'auth.html'));
+});
+
 // Serve dashboard
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard-simple.html'));
+});
+
+// Authentication endpoints
+app.post('/api/auth/signup', (req, res) => {
+  const { email, name } = req.body;
+  
+  if (!email || !name) {
+    return res.status(400).json({
+      error: 'Email and name are required'
+    });
+  }
+  
+  // Check if user already exists
+  const existingUser = Array.from(users.values()).find(user => user.email === email);
+  if (existingUser) {
+    return res.status(400).json({
+      error: 'User with this email already exists'
+    });
+  }
+  
+  // Create new user
+  const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+  const user = {
+    id: userId,
+    email: email,
+    name: name,
+    credits: 5, // 5 free credits
+    created_at: new Date().toISOString(),
+    total_generations: 0
+  };
+  
+  users.set(userId, user);
+  
+  // Create default API key
+  const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+  const apiKeyData = {
+    id: apiKey,
+    user_id: userId,
+    name: 'Default API Key',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    total_requests: 0,
+    last_used_at: null
+  };
+  
+  apiKeys.set(apiKey, apiKeyData);
+  
+  // Create session token
+  const token = crypto.randomUUID();
+  sessions.set(token, {
+    user_id: userId,
+    created_at: new Date().toISOString()
+  });
+  
+  res.json({
+    token: token,
+    user: user,
+    api_key: apiKey,
+    message: 'Account created successfully! You have 5 free credits.'
+  });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({
+      error: 'Email is required'
+    });
+  }
+  
+  // Find user by email
+  const user = Array.from(users.values()).find(u => u.email === email);
+  if (!user) {
+    return res.status(401).json({
+      error: 'User not found'
+    });
+  }
+  
+  // Create session token
+  const token = crypto.randomUUID();
+  sessions.set(token, {
+    user_id: user.id,
+    created_at: new Date().toISOString()
+  });
+  
+  res.json({
+    token: token,
+    user: user,
+    message: 'Login successful'
+  });
+});
+
+// Middleware to validate session token
+function validateSession(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({
+      error: 'No token provided'
+    });
+  }
+  
+  const session = sessions.get(token);
+  if (!session) {
+    return res.status(401).json({
+      error: 'Invalid or expired token'
+    });
+  }
+  
+  req.userId = session.user_id;
+  next();
+}
+
+// User profile endpoint
+app.get('/api/user/profile', validateSession, (req, res) => {
+  const user = users.get(req.userId);
+  if (!user) {
+    return res.status(404).json({
+      error: 'User not found'
+    });
+  }
+  
+  res.json(user);
 });
 
 // API Routes for user management
@@ -223,20 +354,11 @@ app.get('/api/info', (req, res) => {
 });
 
 // Create new API key endpoint
-app.post('/api/create-key', (req, res) => {
+app.post('/api/create-key', validateSession, (req, res) => {
   const { name = 'New API Key' } = req.body;
   
-  // For demo purposes, create a new user and API key
-  const userId = 'user_' + crypto.randomUUID().substring(0, 8);
+  const userId = req.userId;
   const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
-  
-  users.set(userId, {
-    id: userId,
-    email: `user_${userId}@example.com`,
-    credits: 5, // 5 free credits
-    created_at: new Date().toISOString(),
-    total_generations: 0
-  });
   
   apiKeys.set(apiKey, {
     id: apiKey,
@@ -248,12 +370,14 @@ app.post('/api/create-key', (req, res) => {
     last_used_at: null
   });
   
+  const user = users.get(userId);
+  
   res.json({
     api_key: apiKey,
     user_id: userId,
     name: name,
-    credits: 5,
-    message: 'API key created successfully! You have 5 free credits.'
+    credits: user.credits,
+    message: 'API key created successfully!'
   });
 });
 

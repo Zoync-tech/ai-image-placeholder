@@ -235,12 +235,22 @@
         <div class="header">
             <h1>🎨 AI Image Placeholder</h1>
             <p>Generate AI-powered placeholder images using text prompts</p>
+            <div style="margin-top: 20px;">
+                <a href="/auth" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; margin: 0 10px;">Sign Up / Login</a>
+                <a href="/dashboard" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; margin: 0 10px;">Dashboard</a>
+            </div>
         </div>
 
         <div class="content">
             <div class="generator-section">
                 <h2>Generate New Image</h2>
                 <form id="imageForm">
+                    <div class="form-group">
+                        <label for="apiKey">API Key <span style="color: red;">*</span></label>
+                        <input type="text" id="apiKey" placeholder="Enter your API key (get one from dashboard)" required>
+                        <small style="color: #666; font-size: 12px;">Sign up for free to get your API key and 5 free credits!</small>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="prompt">Image Prompt</label>
                         <textarea id="prompt" placeholder="Describe the image you want to generate... (e.g., 'a beautiful sunset over mountains', 'abstract art with vibrant colors')" rows="3"></textarea>
@@ -287,12 +297,12 @@
 
             <div class="examples">
                 <h3>Example URLs</h3>
-                <p>Try these example prompts:</p>
-                <a href="/600x400?text=a%20beautiful%20sunset" class="example-link">Sunset (600x400)</a>
-                <a href="/800x600?text=abstract%20art%20with%20vibrant%20colors" class="example-link">Abstract Art (800x600)</a>
-                <a href="/400x400?text=cute%20cat%20in%20a%20garden" class="example-link">Cute Cat (400x400)</a>
-                <a href="/1200x800?text=modern%20cityscape%20at%20night" class="example-link">Cityscape (1200x800)</a>
-                <a href="/300x200?text=minimalist%20design" class="example-link">Minimalist (300x200)</a>
+                <p>Try these example prompts (replace YOUR_API_KEY with your actual API key):</p>
+                <a href="/600x400.jpg?api_key=YOUR_API_KEY&text=a%20beautiful%20sunset" class="example-link">Sunset (600x400)</a>
+                <a href="/800x600.jpg?api_key=YOUR_API_KEY&text=abstract%20art%20with%20vibrant%20colors" class="example-link">Abstract Art (800x600)</a>
+                <a href="/400x400.jpg?api_key=YOUR_API_KEY&text=cute%20cat%20in%20a%20garden" class="example-link">Cute Cat (400x400)</a>
+                <a href="/1200x800.jpg?api_key=YOUR_API_KEY&text=modern%20cityscape%20at%20night" class="example-link">Cityscape (1200x800)</a>
+                <a href="/300x200.jpg?api_key=YOUR_API_KEY&text=minimalist%20design" class="example-link">Minimalist (300x200)</a>
             </div>
         </div>
     </div>
@@ -314,9 +324,16 @@
             const prompt = encodeURIComponent(promptInput.value || 'abstract art');
             const width = widthInput.value;
             const height = heightInput.value;
-            urlInput.value = `${window.location.origin}/${width}x${height}?text=${prompt}`;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            if (apiKey) {
+                urlInput.value = `${window.location.origin}/${width}x${height}.jpg?api_key=${apiKey}&text=${prompt}`;
+            } else {
+                urlInput.value = `${window.location.origin}/${width}x${height}.jpg?api_key=YOUR_API_KEY&text=${prompt}`;
+            }
         }
 
+        document.getElementById('apiKey').addEventListener('input', updateUrl);
         promptInput.addEventListener('input', updateUrl);
         widthInput.addEventListener('input', updateUrl);
         heightInput.addEventListener('input', updateUrl);
@@ -330,6 +347,13 @@
             const prompt = promptInput.value || 'abstract art';
             const width = widthInput.value;
             const height = heightInput.value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!apiKey) {
+                errorMessage.textContent = 'Please enter your API key';
+                errorMessage.style.display = 'block';
+                return;
+            }
 
             // Show loading state
             generateBtn.disabled = true;
@@ -338,7 +362,7 @@
             errorMessage.style.display = 'none';
 
             try {
-                const url = `/${width}x${height}?text=${encodeURIComponent(prompt)}`;
+                const url = `/${width}x${height}.jpg?api_key=${apiKey}&text=${encodeURIComponent(prompt)}`;
                 
                 // Create image element
                 const img = new Image();
