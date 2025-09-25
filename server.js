@@ -1265,31 +1265,60 @@ app.get('/api/info', (req, res) => {
 });
 
 // Create new API key endpoint
-app.post('/api/create-key', validateSession, (req, res) => {
-  const { name = 'New API Key' } = req.body;
-  
-  const userId = req.userId;
-  const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
-  
-  apiKeys.set(apiKey, {
-    id: apiKey,
-    user_id: userId,
-    name: name,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    total_requests: 0,
-    last_used_at: null
-  });
-  
-  const user = users.get(userId);
-  
-  res.json({
-    api_key: apiKey,
-    user_id: userId,
-    name: name,
-    credits: user.credits,
-    message: 'API key created successfully!'
-  });
+app.post('/api/create-key', validateSession, async (req, res) => {
+  try {
+    const { name = 'New API Key' } = req.body;
+    const userId = req.userId;
+    
+    console.log(`🔑 Creating API key for user: ${userId}`);
+    
+    const apiKey = 'ai_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+    const apiKeyData = {
+      api_key: apiKey,
+      user_id: userId,
+      name: name,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      total_requests: 0,
+      last_used_at: null
+    };
+    
+    console.log(`🔑 API key data:`, apiKeyData);
+    
+    // Create API key using SupabaseService
+    const createdApiKey = await SupabaseService.createApiKey(apiKeyData);
+    if (!createdApiKey) {
+      console.log(`❌ Failed to create API key for user: ${userId}`);
+      return res.status(500).json({
+        error: 'Failed to create API key'
+      });
+    }
+    
+    console.log(`✅ Created API key:`, createdApiKey);
+    
+    // Get user data to return credits
+    const user = await SupabaseService.getUserById(userId);
+    if (!user) {
+      console.log(`❌ User not found: ${userId}`);
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+    
+    res.json({
+      api_key: createdApiKey.api_key,
+      user_id: userId,
+      name: createdApiKey.name,
+      credits: user.credits,
+      message: 'API key created successfully!'
+    });
+  } catch (error) {
+    console.error('❌ Create API key error:', error);
+    res.status(500).json({
+      error: 'Failed to create API key',
+      details: error.message
+    });
+  }
 });
 
 // Handle OPTIONS requests for CORS
@@ -1514,6 +1543,70 @@ app.post('/api/debug-login', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Debug login error:', error);
+    res.status(500).json({
+      error: 'Debug failed',
+      details: error.message
+    });
+  }
+});
+
+// Debug API key creation endpoint
+app.post('/api/debug-create-key', validateSession, async (req, res) => {
+  try {
+    const { name = 'Debug API Key' } = req.body;
+    const userId = req.userId;
+    
+    console.log(`🔍 Debug API key creation for user: ${userId}`);
+    
+    // Check user exists
+    const user = await SupabaseService.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        userId: userId
+      });
+    }
+    
+    // Check Supabase status
+    const supabaseStatus = {
+      configured: isSupabaseConfigured,
+      url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+    };
+    
+    // Check existing API keys
+    let existingApiKeys = [];
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('api_keys')
+          .select('*')
+          .eq('user_id', userId);
+        
+        if (error) {
+          console.error('❌ Error fetching existing API keys:', error);
+        } else {
+          existingApiKeys = data || [];
+        }
+      } catch (error) {
+        console.error('❌ Exception fetching existing API keys:', error);
+      }
+    }
+    
+    // Check in-memory API keys
+    const inMemoryApiKeys = Array.from(apiKeys.entries()).filter(([key, value]) => value.user_id === userId);
+    
+    res.json({
+      userId: userId,
+      user: user,
+      supabase_status: supabaseStatus,
+      existing_api_keys: existingApiKeys,
+      in_memory_api_keys: inMemoryApiKeys,
+      total_existing_keys: existingApiKeys.length,
+      total_in_memory_keys: inMemoryApiKeys.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Debug create key error:', error);
     res.status(500).json({
       error: 'Debug failed',
       details: error.message
