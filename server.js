@@ -421,33 +421,57 @@ class SupabaseService {
   static async getEmailVerification(email) {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
+      console.log(`📋 Using in-memory storage for email verification: ${email}`);
       return emailVerifications.get(email) || null;
     }
 
-    const { data, error } = await supabase
-      .from('email_verifications')
-      .select('*')
-      .eq('email', email)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('email_verifications')
+        .select('*')
+        .eq('email', email)
+        .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase getEmailVerification error:', error);
+        // Fallback to in-memory storage
+        return emailVerifications.get(email) || null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Supabase getEmailVerification exception:', error);
+      // Fallback to in-memory storage
+      return emailVerifications.get(email) || null;
+    }
   }
 
   static async deleteEmailVerification(email) {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
       emailVerifications.delete(email);
+      console.log(`🗑️ Deleted verification from in-memory storage: ${email}`);
       return true;
     }
 
-    const { error } = await supabase
-      .from('email_verifications')
-      .delete()
-      .eq('email', email);
+    try {
+      const { error } = await supabase
+        .from('email_verifications')
+        .delete()
+        .eq('email', email);
 
-    if (error) throw error;
-    return true;
+      if (error) {
+        console.error('Supabase deleteEmailVerification error:', error);
+        // Fallback to in-memory storage
+        emailVerifications.delete(email);
+      }
+      console.log(`🗑️ Deleted verification: ${email}`);
+      return true;
+    } catch (error) {
+      console.error('Supabase deleteEmailVerification exception:', error);
+      // Fallback to in-memory storage
+      emailVerifications.delete(email);
+      return true;
+    }
   }
 }
 
@@ -552,28 +576,46 @@ async function sendVerificationEmail(email, code) {
 
 // Verify email code
 async function verifyEmailCode(email, code) {
-  const verification = await SupabaseService.getEmailVerification(email);
-  if (!verification) {
-    return { success: false, error: 'No verification code found' };
-  }
-  
-  // Check if code is expired (10 minutes)
-  const now = new Date();
-  const expirationTime = new Date(verification.created_at);
-  expirationTime.setMinutes(expirationTime.getMinutes() + 10);
-  
-  if (now > expirationTime) {
+  try {
+    console.log(`🔍 Verifying email: ${email}, code: ${code}`);
+    
+    const verification = await SupabaseService.getEmailVerification(email);
+    console.log(`📋 Retrieved verification data:`, verification ? 'Found' : 'Not found');
+    
+    if (!verification) {
+      console.log(`❌ No verification code found for ${email}`);
+      return { success: false, error: 'No verification code found' };
+    }
+    
+    // Check if code is expired (10 minutes)
+    const now = new Date();
+    const expirationTime = new Date(verification.created_at);
+    expirationTime.setMinutes(expirationTime.getMinutes() + 10);
+    
+    console.log(`⏰ Checking expiration: now=${now.toISOString()}, expires=${expirationTime.toISOString()}`);
+    
+    if (now > expirationTime) {
+      console.log(`❌ Verification code expired for ${email}`);
+      await SupabaseService.deleteEmailVerification(email);
+      return { success: false, error: 'Verification code expired' };
+    }
+    
+    console.log(`🔐 Comparing codes: stored="${verification.code}", provided="${code}"`);
+    
+    if (verification.code !== code) {
+      console.log(`❌ Invalid verification code for ${email}`);
+      return { success: false, error: 'Invalid verification code' };
+    }
+    
+    console.log(`✅ Verification code is valid for ${email}`);
+    
+    // Code is valid, delete verification record
     await SupabaseService.deleteEmailVerification(email);
-    return { success: false, error: 'Verification code expired' };
+    return { success: true, name: verification.name };
+  } catch (error) {
+    console.error('❌ verifyEmailCode error:', error);
+    return { success: false, error: 'Verification failed: ' + error.message };
   }
-  
-  if (verification.code !== code) {
-    return { success: false, error: 'Invalid verification code' };
-  }
-  
-  // Code is valid, delete verification record
-  await SupabaseService.deleteEmailVerification(email);
-  return { success: true, name: verification.name };
 }
 
 // Favicon handler
@@ -593,6 +635,34 @@ app.get('/health', (req, res) => {
     resend_configured: !!process.env.RESEND_API_KEY,
     supabase_configured: isSupabaseConfigured
   });
+});
+
+// Debug verification endpoint
+app.post('/api/debug-verification', async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    console.log(`🔍 Debug verification for email: ${email}`);
+    
+    const verification = await SupabaseService.getEmailVerification(email);
+    
+    res.json({
+      email: email,
+      verification: verification,
+      in_memory_verifications: Array.from(emailVerifications.entries()),
+      supabase_configured: isSupabaseConfigured
+    });
+  } catch (error) {
+    console.error('❌ Debug verification error:', error);
+    res.status(500).json({ 
+      error: 'Debug failed',
+      details: error.message 
+    });
+  }
 });
 
 // Test email endpoint
