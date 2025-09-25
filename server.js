@@ -17,6 +17,7 @@ const imageCache = new NodeCache({ stdTTL: 86400 });
 const users = new Map();
 const apiKeys = new Map();
 const sessions = new Map(); // For user sessions
+const emailVerifications = new Map(); // For email verification codes
 
 // Initialize with a default user for testing
 const defaultUserId = 'user_' + crypto.randomUUID().substring(0, 8);
@@ -172,6 +173,48 @@ function updateApiKeyStats(apiKeyId) {
   }
 }
 
+// Generate email verification code
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+}
+
+// Send verification email (mock function - in production, use real email service)
+function sendVerificationEmail(email, code) {
+  console.log(`📧 Verification email sent to ${email}`);
+  console.log(`🔐 Verification code: ${code}`);
+  console.log(`⏰ Code expires in 10 minutes`);
+  
+  // In production, integrate with email service like SendGrid, AWS SES, etc.
+  // For now, we'll just log it to console
+  return true;
+}
+
+// Verify email code
+function verifyEmailCode(email, code) {
+  const verification = emailVerifications.get(email);
+  if (!verification) {
+    return { success: false, error: 'No verification code found' };
+  }
+  
+  // Check if code is expired (10 minutes)
+  const now = new Date();
+  const expirationTime = new Date(verification.created_at);
+  expirationTime.setMinutes(expirationTime.getMinutes() + 10);
+  
+  if (now > expirationTime) {
+    emailVerifications.delete(email);
+    return { success: false, error: 'Verification code expired' };
+  }
+  
+  if (verification.code !== code) {
+    return { success: false, error: 'Invalid verification code' };
+  }
+  
+  // Code is valid, mark email as verified
+  emailVerifications.delete(email);
+  return { success: true };
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -192,6 +235,11 @@ app.get('/', (req, res) => {
 // Serve auth page
 app.get('/auth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'auth.html'));
+});
+
+// Serve verification page
+app.get('/verify', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify.html'));
 });
 
 // Serve dashboard
@@ -217,12 +265,55 @@ app.post('/api/auth/signup', (req, res) => {
     });
   }
   
+  // Generate verification code
+  const verificationCode = generateVerificationCode();
+  
+  // Store verification code
+  emailVerifications.set(email, {
+    code: verificationCode,
+    name: name,
+    created_at: new Date().toISOString()
+  });
+  
+  // Send verification email
+  sendVerificationEmail(email, verificationCode);
+  
+  res.json({
+    message: 'Please check your email for verification code',
+    email: email,
+    requires_verification: true
+  });
+});
+
+// Email verification endpoint
+app.post('/api/auth/verify-email', (req, res) => {
+  const { email, code } = req.body;
+  
+  if (!email || !code) {
+    return res.status(400).json({
+      error: 'Email and verification code are required'
+    });
+  }
+  
+  // Verify the code
+  const verification = verifyEmailCode(email, code);
+  if (!verification.success) {
+    return res.status(400).json({
+      error: verification.error
+    });
+  }
+  
+  // Get user data from verification
+  const verificationData = emailVerifications.get(email);
+  const name = verificationData ? verificationData.name : 'User';
+  
   // Create new user
   const userId = 'user_' + crypto.randomUUID().substring(0, 8);
   const user = {
     id: userId,
     email: email,
     name: name,
+    email_verified: true,
     credits: 5, // 5 free credits
     created_at: new Date().toISOString(),
     total_generations: 0
@@ -255,7 +346,43 @@ app.post('/api/auth/signup', (req, res) => {
     token: token,
     user: user,
     api_key: apiKey,
-    message: 'Account created successfully! You have 5 free credits.'
+    message: 'Email verified successfully! Account created with 5 free credits.'
+  });
+});
+
+// Resend verification code endpoint
+app.post('/api/auth/resend-verification', (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({
+      error: 'Email is required'
+    });
+  }
+  
+  // Check if verification already exists
+  const existingVerification = emailVerifications.get(email);
+  if (!existingVerification) {
+    return res.status(400).json({
+      error: 'No pending verification found for this email'
+    });
+  }
+  
+  // Generate new verification code
+  const verificationCode = generateVerificationCode();
+  
+  // Update verification code
+  emailVerifications.set(email, {
+    code: verificationCode,
+    name: existingVerification.name,
+    created_at: new Date().toISOString()
+  });
+  
+  // Send verification email
+  sendVerificationEmail(email, verificationCode);
+  
+  res.json({
+    message: 'New verification code sent to your email'
   });
 });
 
@@ -272,7 +399,15 @@ app.post('/api/auth/login', (req, res) => {
   const user = Array.from(users.values()).find(u => u.email === email);
   if (!user) {
     return res.status(401).json({
-      error: 'User not found'
+      error: 'User not found. Please sign up first.'
+    });
+  }
+  
+  // Check if email is verified
+  if (!user.email_verified) {
+    return res.status(403).json({
+      error: 'Email not verified. Please verify your email first.',
+      requires_verification: true
     });
   }
   

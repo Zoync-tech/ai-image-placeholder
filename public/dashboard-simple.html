@@ -385,6 +385,11 @@
                         document.getElementById('userCredits').textContent = userData.credits || 0;
                         document.getElementById('totalGenerations').textContent = userData.total_generations || 0;
                         document.getElementById('accountCreated').textContent = new Date(userData.created_at).toLocaleDateString();
+                    } else if (response.status === 401) {
+                        // Token expired or invalid
+                        localStorage.removeItem('userToken');
+                        localStorage.removeItem('userEmail');
+                        window.location.href = '/auth.html';
                     }
                 } catch (error) {
                     console.error('Error loading user data:', error);
