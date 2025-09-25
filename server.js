@@ -226,14 +226,24 @@ class SupabaseService {
       return Array.from(users.values()).find(user => user.email === email) || null;
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
-    return data;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase getUserByEmail error:', error);
+        // Fallback to in-memory storage on Supabase error
+        return Array.from(users.values()).find(user => user.email === email) || null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Supabase getUserByEmail exception:', error);
+      // Fallback to in-memory storage on exception
+      return Array.from(users.values()).find(user => user.email === email) || null;
+    }
   }
 
   static async getUserById(userId) {
@@ -377,23 +387,35 @@ class SupabaseService {
       return verificationData;
     }
 
-    // Delete any existing verification for this email
-    await supabase
-      .from('email_verifications')
-      .delete()
-      .eq('email', email);
+    try {
+      // Delete any existing verification for this email
+      await supabase
+        .from('email_verifications')
+        .delete()
+        .eq('email', email);
 
-    const { data, error } = await supabase
-      .from('email_verifications')
-      .insert([{
-        email: email,
-        ...verificationData
-      }])
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('email_verifications')
+        .insert([{
+          email: email,
+          ...verificationData
+        }])
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('Supabase storeEmailVerification error:', error);
+        // Fallback to in-memory storage
+        emailVerifications.set(email, verificationData);
+        return verificationData;
+      }
+      return data;
+    } catch (error) {
+      console.error('Supabase storeEmailVerification exception:', error);
+      // Fallback to in-memory storage
+      emailVerifications.set(email, verificationData);
+      return verificationData;
+    }
   }
 
   static async getEmailVerification(email) {
@@ -553,6 +575,11 @@ async function verifyEmailCode(email, code) {
   await SupabaseService.deleteEmailVerification(email);
   return { success: true, name: verification.name };
 }
+
+// Favicon handler
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No Content
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
