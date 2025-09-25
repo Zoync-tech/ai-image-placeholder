@@ -725,7 +725,13 @@ app.get('/api/supabase-status', async (req, res) => {
       configured: isSupabaseConfigured,
       url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
       service_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET',
-      timestamp: new Date().toISOString()
+      url_value: process.env.SUPABASE_URL || 'NOT SET',
+      service_key_preview: process.env.SUPABASE_SERVICE_ROLE_KEY ? 
+        process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 20) + '...' : 'NOT SET',
+      timestamp: new Date().toISOString(),
+      in_memory_users: Array.from(users.values()),
+      in_memory_sessions: Array.from(sessions.entries()),
+      in_memory_api_keys: Array.from(apiKeys.entries())
     };
 
     if (isSupabaseConfigured) {
@@ -746,6 +752,9 @@ app.get('/api/supabase-status', async (req, res) => {
         status.connection = 'FAILED';
         status.error = error.message;
       }
+    } else {
+      status.connection = 'NOT_CONFIGURED';
+      status.reason = 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables';
     }
 
     res.json(status);
