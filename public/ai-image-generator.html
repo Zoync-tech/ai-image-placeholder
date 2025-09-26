@@ -466,20 +466,96 @@
             }).join('');
         }
 
-        // Copy image URL to clipboard
+        // Copy image URL to clipboard - SIMPLIFIED VERSION
         function copyImageUrl(url) {
-            // Try modern clipboard API first
+            console.log('Attempting to copy:', url);
+            
+            // Simple, reliable method that works in most cases
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            textArea.style.opacity = '0';
+            textArea.style.pointerEvents = 'none';
+            document.body.appendChild(textArea);
+            
+            try {
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 99999); // For mobile devices
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('Copy successful!');
+                    showCopySuccess(event.target.closest('button'));
+                } else {
+                    console.log('Copy failed, trying alternative method...');
+                    tryAlternativeCopy(url);
+                }
+            } catch (err) {
+                console.error('Copy error:', err);
+                document.body.removeChild(textArea);
+                tryAlternativeCopy(url);
+            }
+        }
+
+        // Alternative copy method
+        function tryAlternativeCopy(text) {
+            // Try the modern API as backup
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(url).then(() => {
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Modern API copy successful!');
                     showCopySuccess(event.target.closest('button'));
                 }).catch(err => {
-                    console.error('Clipboard API failed:', err);
-                    fallbackCopy(url);
+                    console.error('Modern API also failed:', err);
+                    showSimpleCopyModal(text);
                 });
             } else {
-                // Fallback for non-HTTPS or older browsers
-                fallbackCopy(url);
+                showSimpleCopyModal(text);
             }
+        }
+
+        // Simple modal for manual copying
+        function showSimpleCopyModal(text) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; color: black;">
+                    <h3 style="margin-top: 0;">Copy URL</h3>
+                    <p>Please copy this URL:</p>
+                    <input type="text" value="${text}" readonly style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px;" onclick="this.select()">
+                    <div style="margin-top: 15px; text-align: right;">
+                        <button onclick="this.closest('div').parentElement.remove()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Auto-select the input
+            const input = modal.querySelector('input');
+            input.focus();
+            input.select();
+            
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
         }
 
         // Fallback copy method
@@ -653,7 +729,7 @@
             document.getElementById('currentDimensions').textContent = `${width}×${height}`;
         }
 
-        // Copy live URL to clipboard
+        // Copy live URL to clipboard - SIMPLIFIED VERSION
         function copyLiveUrl() {
             const url = document.getElementById('liveUrlPreview').textContent;
             
@@ -662,9 +738,27 @@
                 return;
             }
             
-            // Try modern clipboard API first
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(url).then(() => {
+            console.log('Attempting to copy live URL');
+            
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            textArea.style.opacity = '0';
+            textArea.style.pointerEvents = 'none';
+            document.body.appendChild(textArea);
+            
+            try {
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 99999);
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('Live URL copy successful!');
                     // Show success feedback
                     const button = event.target.closest('button');
                     const originalHTML = button.innerHTML;
@@ -681,13 +775,14 @@
                         button.classList.remove('bg-green-500');
                         button.classList.add('bg-green-700', 'hover:bg-green-600');
                     }, 2000);
-                }).catch(err => {
-                    console.error('Clipboard API failed:', err);
-                    fallbackCopy(url);
-                });
-            } else {
-                // Fallback for non-HTTPS or older browsers
-                fallbackCopy(url);
+                } else {
+                    console.log('Live URL copy failed');
+                    showSimpleCopyModal(url);
+                }
+            } catch (err) {
+                console.error('Live URL copy error:', err);
+                document.body.removeChild(textArea);
+                showSimpleCopyModal(url);
             }
         }
 
