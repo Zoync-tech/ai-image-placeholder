@@ -974,8 +974,8 @@ app.get('/favicon.ico', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     mode: 'with-auth',
     total_users: users.size,
@@ -985,6 +985,18 @@ app.get('/health', (req, res) => {
     supabase_configured: isSupabaseConfigured,
     supabase_url: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
     supabase_service_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET'
+  });
+});
+
+// Test endpoint for debugging
+app.post('/api/test-verification', (req, res) => {
+  console.log('🧪 Test endpoint hit');
+  console.log('📥 Request body:', req.body);
+  console.log('📥 Request headers:', req.headers);
+  res.json({
+    message: 'Test endpoint working',
+    body: req.body,
+    headers: req.headers
   });
 });
 
@@ -1103,6 +1115,7 @@ app.post('/api/test-verification-flow', async (req, res) => {
     const verificationData = {
       code: verificationCode,
       name: name,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
       created_at: new Date().toISOString()
     };
     
@@ -1235,6 +1248,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const verificationData = {
       code: verificationCode,
       name: name,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
       created_at: new Date().toISOString()
     };
     
@@ -1269,9 +1283,19 @@ app.post('/api/auth/signup', async (req, res) => {
 
 // Email verification endpoint
 app.post('/api/auth/verify-email', async (req, res) => {
+  console.log('🔍 Verification endpoint hit');
+  console.log('📥 Request body:', req.body);
+  console.log('📥 Request headers:', req.headers);
+  
   const { email, code } = req.body;
   
+  console.log('📧 Email:', email);
+  console.log('🔐 Code:', code);
+  
   if (!email || !code) {
+    console.log('❌ Missing email or code');
+    console.log('📧 Email present:', !!email);
+    console.log('🔐 Code present:', !!code);
     return res.status(400).json({
       error: 'Email and verification code are required'
     });
@@ -1376,6 +1400,7 @@ app.post('/api/auth/resend-verification', (req, res) => {
   emailVerifications.set(email, {
     code: verificationCode,
     name: existingVerification.name,
+    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
     created_at: new Date().toISOString()
   });
   
