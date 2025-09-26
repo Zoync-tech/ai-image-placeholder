@@ -2014,6 +2014,35 @@ app.options('*', (req, res) => {
   res.status(200).end();
 });
 
+// Specific routes for HTML pages (must come before catch-all routes)
+app.get('/ai-image-generator.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ai-image-generator.html'));
+});
+
+app.get('/api-keys.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'api-keys.html'));
+});
+
+app.get('/settings.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+});
+
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/auth.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'auth.html'));
+});
+
+app.get('/verify.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify.html'));
+});
+
+app.get('/reset-password.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
+});
+
 // Main route handler for image generation (with .jpg extension for VRChat)
 app.get('/:dimensions.jpg', async (req, res) => {
   try {

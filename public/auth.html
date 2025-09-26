@@ -437,7 +437,7 @@
                     showSuccess('Login successful! Redirecting to AI Image Generator...');
                     setTimeout(() => {
                         console.log('Redirecting to:', '/ai-image-generator.html');
-                        window.location.href = '/ai-image-generator.html';
+                        window.location.href = 'https://www.vrccim.com/ai-image-generator.html';
                     }, 1500);
                 } else {
                     const error = await response.json();
@@ -515,7 +515,7 @@
                         localStorage.setItem('userEmail', email);
                         showSuccess('Account created successfully! Redirecting to AI Image Generator...');
                         setTimeout(() => {
-                            window.location.href = '/ai-image-generator.html';
+                            window.location.href = 'https://www.vrccim.com/ai-image-generator.html';
                         }, 1500);
                     }
                 } else {
