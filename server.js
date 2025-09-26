@@ -545,7 +545,18 @@ class SupabaseService {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
       console.log(`📋 Using in-memory storage for getSession: ${token}`);
-      return sessions.get(token) || null;
+      const session = sessions.get(token);
+      if (session) {
+        // Check expiration for in-memory sessions
+        const now = new Date();
+        const expiresAt = new Date(session.expires_at);
+        if (now > expiresAt) {
+          console.log(`❌ In-memory session expired for token: ${token}`);
+          sessions.delete(token);
+          return null;
+        }
+      }
+      return session || null;
     }
 
     try {
@@ -558,13 +569,46 @@ class SupabaseService {
       if (error && error.code !== 'PGRST116') {
         console.error('Supabase getSession error:', error);
         // Fallback to in-memory storage
-        return sessions.get(token) || null;
+        const session = sessions.get(token);
+        if (session) {
+          const now = new Date();
+          const expiresAt = new Date(session.expires_at);
+          if (now > expiresAt) {
+            console.log(`❌ In-memory session expired for token: ${token}`);
+            sessions.delete(token);
+            return null;
+          }
+        }
+        return session || null;
       }
+      
+      if (data) {
+        // Check if session has expired
+        const now = new Date();
+        const expiresAt = new Date(data.expires_at);
+        if (now > expiresAt) {
+          console.log(`❌ Session expired for token: ${token}`);
+          // Delete expired session from database
+          await supabase.from('sessions').delete().eq('token', token);
+          return null;
+        }
+      }
+      
       return data;
     } catch (error) {
       console.error('Supabase getSession exception:', error);
       // Fallback to in-memory storage
-      return sessions.get(token) || null;
+      const session = sessions.get(token);
+      if (session) {
+        const now = new Date();
+        const expiresAt = new Date(session.expires_at);
+        if (now > expiresAt) {
+          console.log(`❌ In-memory session expired for token: ${token}`);
+          sessions.delete(token);
+          return null;
+        }
+      }
+      return session || null;
     }
   }
 
@@ -1717,25 +1761,34 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // Middleware to validate session token
 async function validateSession(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  console.log(`🔍 Session validation - Token: ${token ? 'provided' : 'missing'}`);
+  console.log(`🔍 Session validation - Headers:`, req.headers.authorization ? 'Authorization header present' : 'No Authorization header');
 
   if (!token) {
+    console.log(`❌ No token provided in validateSession`);
     return res.status(401).json({
       error: 'No token provided'
     });
   }
 
   try {
+    console.log(`🔍 Looking up session for token: ${token}`);
     const session = await SupabaseService.getSession(token);
+    console.log(`🔍 Session lookup result:`, session ? `Found session for user ${session.user_id}` : 'No session found');
+    
     if (!session) {
+      console.log(`❌ Invalid or expired token: ${token}`);
       return res.status(401).json({
         error: 'Invalid or expired token'
       });
     }
 
     req.userId = session.user_id;
+    console.log(`✅ Session validated for user: ${req.userId}`);
     next();
   } catch (error) {
-    console.error('Session validation error:', error);
+    console.error('❌ Session validation error:', error);
     return res.status(401).json({
       error: 'Session validation failed'
     });

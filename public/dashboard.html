@@ -208,11 +208,25 @@
                     }
                     } else {
                     console.error('Failed to load user profile:', response.status, response.statusText);
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error details:', errorData);
+                    
+                    // Show user-friendly error message
+                    if (response.status === 401) {
+                        alert('Your session has expired. Please log in again.');
+                    } else {
+                        alert('Failed to load user data. Please try again.');
+                    }
+                    
                     localStorage.removeItem('userToken');
                     window.location.href = '/auth';
                     }
                 } catch (error) {
                 console.error('Error loading user data:', error);
+                
+                // Show user-friendly error message
+                alert('Failed to load user data. Please check your connection and try again.');
+                
                 localStorage.removeItem('userToken');
                 window.location.href = '/auth';
             }
