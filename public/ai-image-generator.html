@@ -468,28 +468,63 @@
 
         // Copy image URL to clipboard
         function copyImageUrl(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                // Show success feedback
-                const button = event.target.closest('button');
-                const originalText = button.innerHTML;
-                button.innerHTML = `
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Copied!
-                `;
-                button.classList.remove('bg-gray-600', 'hover:bg-gray-500');
-                button.classList.add('bg-green-600', 'hover:bg-green-500');
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showCopySuccess(event.target.closest('button'));
+                }).catch(err => {
+                    console.error('Clipboard API failed:', err);
+                    fallbackCopy(url);
+                });
+            } else {
+                // Fallback for non-HTTPS or older browsers
+                fallbackCopy(url);
+            }
+        }
 
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.classList.remove('bg-green-600', 'hover:bg-green-500');
-                    button.classList.add('bg-gray-600', 'hover:bg-gray-500');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy URL:', err);
-                alert('Failed to copy URL to clipboard');
-            });
+        // Fallback copy method
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(event.target.closest('button'));
+                } else {
+                    throw new Error('execCommand failed');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert('Failed to copy to clipboard. Please copy manually: ' + text);
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Show copy success feedback
+        function showCopySuccess(button) {
+            const originalText = button.innerHTML;
+            button.innerHTML = `
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Copied!
+            `;
+            button.classList.remove('bg-gray-600', 'hover:bg-gray-500');
+            button.classList.add('bg-green-600', 'hover:bg-green-500');
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('bg-green-600', 'hover:bg-green-500');
+                button.classList.add('bg-gray-600', 'hover:bg-gray-500');
+            }, 2000);
         }
 
 
@@ -529,27 +564,33 @@
                 return;
             }
             
-            navigator.clipboard.writeText(url).then(() => {
-                // Show success feedback
-                const button = event.target.closest('button');
-                const originalHTML = button.innerHTML;
-                button.innerHTML = `
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                `;
-                button.classList.remove('bg-green-700', 'hover:bg-green-600');
-                button.classList.add('bg-green-500');
-                
-                setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                    button.classList.remove('bg-green-500');
-                    button.classList.add('bg-green-700', 'hover:bg-green-600');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy URL:', err);
-                alert('Failed to copy URL to clipboard');
-            });
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => {
+                    // Show success feedback
+                    const button = event.target.closest('button');
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    `;
+                    button.classList.remove('bg-green-700', 'hover:bg-green-600');
+                    button.classList.add('bg-green-500');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('bg-green-500');
+                        button.classList.add('bg-green-700', 'hover:bg-green-600');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Clipboard API failed:', err);
+                    fallbackCopy(url);
+                });
+            } else {
+                // Fallback for non-HTTPS or older browsers
+                fallbackCopy(url);
+            }
         }
 
         // Generate link function
