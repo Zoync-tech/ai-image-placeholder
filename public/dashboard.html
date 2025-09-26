@@ -426,28 +426,126 @@
 
         // Fallback copy method
         function fallbackCopy(text) {
+            // Try multiple fallback methods
+            const methods = [
+                () => tryExecCommandCopy(text),
+                () => tryTextAreaCopy(text),
+                () => tryPromptCopy(text)
+            ];
+            
+            for (const method of methods) {
+                try {
+                    if (method()) {
+                        showCopySuccess(event.target.closest('button'));
+                        return;
+                    }
+                } catch (err) {
+                    console.error('Copy method failed:', err);
+                }
+            }
+            
+            // If all methods fail, show the text in a modal for manual copying
+            showManualCopyModal(text);
+        }
+
+        // Method 1: execCommand with textarea
+        function tryExecCommandCopy(text) {
             const textArea = document.createElement('textarea');
             textArea.value = text;
             textArea.style.position = 'fixed';
             textArea.style.left = '-999999px';
             textArea.style.top = '-999999px';
+            textArea.style.opacity = '0';
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
             
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showCopySuccess(event.target.closest('button'));
-                } else {
-                    throw new Error('execCommand failed');
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return successful;
+        }
+
+        // Method 2: Alternative textarea approach
+        function tryTextAreaCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'absolute';
+            textArea.style.left = '50%';
+            textArea.style.top = '50%';
+            textArea.style.transform = 'translate(-50%, -50%)';
+            textArea.style.zIndex = '9999';
+            textArea.style.width = '300px';
+            textArea.style.height = '100px';
+            textArea.style.border = '2px solid #ccc';
+            textArea.style.padding = '10px';
+            textArea.style.fontSize = '14px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return successful;
+        }
+
+        // Method 3: Use prompt as last resort
+        function tryPromptCopy(text) {
+            const userInput = prompt('Copy this text manually:', text);
+            return userInput !== null; // Return true if user didn't cancel
+        }
+
+        // Show modal for manual copying
+        function showManualCopyModal(text) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 500px;
+                width: 90%;
+                color: black;
+            `;
+            
+            modalContent.innerHTML = `
+                <h3 style="margin-top: 0; color: #333;">Copy to Clipboard</h3>
+                <p style="color: #666; margin-bottom: 15px;">Please copy the text below manually:</p>
+                <textarea readonly style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; resize: vertical;">${text}</textarea>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                </div>
+            `;
+            
+            modal.className = 'modal-overlay';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Auto-select the text
+            const textarea = modalContent.querySelector('textarea');
+            textarea.focus();
+            textarea.select();
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
                 }
-            } catch (err) {
-                console.error('Fallback copy failed:', err);
-                alert('Failed to copy to clipboard. Please copy manually: ' + text);
-            } finally {
-                document.body.removeChild(textArea);
-            }
+            });
         }
 
         // Show copy success feedback
