@@ -3,259 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Placeholder - Verify Email</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <title>VRC Cloud Instance Manager - Verify Email</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/preline@2.0.3/dist/preline.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-
-        .header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            text-align: center;
-            letter-spacing: 2px;
-            font-family: 'Courier New', monospace;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            margin-bottom: 10px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            color: #dc3545;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .success {
-            color: #155724;
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .info-section {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .info-section h3 {
-            color: #0066cc;
-            margin-bottom: 10px;
-        }
-
-        .info-section p {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .code-input {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .resend-section {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e1e5e9;
-        }
-
-        .resend-section p {
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .back-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .email-display {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📧 Verify Email</h1>
-            <p>Enter the verification code sent to your email</p>
+<body class="bg-gradient-to-br from-primary-50 to-blue-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-lg">
+        <!-- Back to Auth Link -->
+        <div class="text-center mb-6">
+            <a href="/auth" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Login
+            </a>
         </div>
 
-        <div class="content">
-            <div class="info-section">
-                <h3>📬 Check Your Email</h3>
-                <p>We've sent a 6-digit verification code to:</p>
-                <div class="email-display" id="emailDisplay">
-                    Loading email...
+        <!-- Verification Card -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-primary-600 to-blue-700 px-8 py-12 text-center">
+                <div class="mb-6">
+                    <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <img src="/VRCCM Logo.png" alt="VRC Cloud Instance Manager" class="h-8 w-auto mx-auto mb-4">
                 </div>
-                <p><strong>Code expires in 10 minutes</strong></p>
-                <p>If you don't see the email, check your spam folder.</p>
+                <h1 class="text-3xl font-bold text-white mb-2">Verify Your Email</h1>
+                <p class="text-blue-100 text-lg">Enter the verification code sent to your email</p>
             </div>
 
-            <form id="verificationForm">
-                <div class="form-group">
-                    <label for="verificationCode">Verification Code</label>
-                    <input type="text" id="verificationCode" placeholder="000000" maxlength="6" class="code-input" required>
+            <!-- Content -->
+            <div class="p-8">
+                <!-- Info Section -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-100 border border-blue-200 rounded-xl p-6 mb-8">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-2">Check Your Email</h3>
+                            <p class="text-blue-800 text-sm mb-3">We've sent a 6-digit verification code to:</p>
+                            <div class="bg-white border border-blue-200 rounded-lg p-3 mb-3">
+                                <div class="text-blue-900 font-mono text-sm text-center font-semibold" id="emailDisplay">
+                                    Loading email...
+                                </div>
+                            </div>
+                            <div class="space-y-1 text-sm text-blue-700">
+                                <p class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Code expires in 10 minutes
+                                </p>
+                                <p class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Check your spam folder if you don't see it
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <button type="submit" class="btn">Verify Email</button>
-                
-                <div class="loading" id="verifyLoading">
-                    <div class="spinner"></div>
-                    <p>Verifying...</p>
-                </div>
-            </form>
 
-            <div class="resend-section">
-                <p>Didn't receive the code?</p>
-                <button type="button" class="btn btn-secondary" onclick="resendCode()">Resend Code</button>
-                
-                <div class="loading" id="resendLoading">
-                    <div class="spinner"></div>
-                    <p>Sending new code...</p>
+                <!-- Verification Form -->
+                <form id="verificationForm" class="space-y-6">
+                    <div>
+                        <label for="verificationCode" class="block text-sm font-medium text-gray-700 mb-3 text-center">
+                            Enter Verification Code
+                        </label>
+                        <input type="text"
+                               id="verificationCode"
+                               placeholder="000000"
+                               maxlength="6"
+                               required
+                               class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl text-center text-2xl font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary-600 text-white hover:bg-primary-700 py-4 px-6 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span class="btn-text">Verify Email</span>
+                        <div class="loading hidden flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Verifying...
+                        </div>
+                    </button>
+                </form>
+
+                <!-- Resend Section -->
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-gray-600 mb-4">Didn't receive the code?</p>
+                    <button type="button" onclick="resendCode()" class="bg-gray-600 text-white hover:bg-gray-700 py-3 px-6 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span class="btn-text">Resend Code</span>
+                        <div class="loading hidden flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div id="errorMessage" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-red-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-red-800"></p>
+                    </div>
+                </div>
+                <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <p class="text-green-800"></p>
+                    </div>
                 </div>
             </div>
-
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="/auth" class="back-link">← Back to Login</a>
-            </div>
-
-            <div class="error" id="errorMessage"></div>
-            <div class="success" id="successMessage"></div>
         </div>
     </div>
 
@@ -292,57 +189,73 @@
 
         document.getElementById('verificationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const code = document.getElementById('verificationCode').value.trim();
-            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const loading = submitBtn.querySelector('.loading');
+
             if (code.length !== 6) {
-                showError('errorMessage', 'Please enter a 6-digit verification code');
+                showError('Please enter a 6-digit verification code');
                 return;
             }
-            
-            showLoading('verifyLoading');
+
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            loading.classList.remove('hidden');
             hideMessages();
-            
+
             try {
                 const response = await fetch('/api/auth/verify-email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        email: userEmail, 
-                        code: code 
+                    body: JSON.stringify({
+                        email: userEmail,
+                        code: code
                     })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // Store user data
                     localStorage.setItem('userToken', data.token);
                     localStorage.setItem('userEmail', userEmail);
                     localStorage.removeItem('pendingVerificationEmail');
-                    
+
                     showSuccess('Email verified successfully! Redirecting to dashboard...');
-                    
+
                     setTimeout(() => {
                         window.location.href = '/dashboard';
                     }, 2000);
                 } else {
                     const error = await response.json();
-                    showError('errorMessage', error.error || 'Verification failed');
+                    showError(error.error || 'Verification failed');
                 }
             } catch (error) {
-                showError('errorMessage', 'Verification failed. Please try again.');
+                showError('Verification failed. Please try again.');
             }
-            
-            hideLoading('verifyLoading');
+
+            // Hide loading state
+            submitBtn.disabled = false;
+            btnText.style.display = 'block';
+            loading.classList.add('hidden');
         });
 
         async function resendCode() {
-            showLoading('resendLoading');
+            const resendBtn = document.querySelector('button[onclick="resendCode()"]');
+            const btnText = resendBtn.querySelector('.btn-text');
+            const loading = resendBtn.querySelector('.loading');
+
+            // Show loading state
+            resendBtn.disabled = true;
+            btnText.style.display = 'none';
+            loading.classList.remove('hidden');
             hideMessages();
-            
+
             try {
                 const response = await fetch('/api/auth/resend-verification', {
                     method: 'POST',
@@ -351,51 +264,48 @@
                     },
                     body: JSON.stringify({ email: userEmail })
                 });
-                
+
                 if (response.ok) {
                     showSuccess('New verification code sent to your email');
                     document.getElementById('verificationCode').value = '';
                     document.getElementById('verificationCode').focus();
                 } else {
                     const error = await response.json();
-                    showError('errorMessage', error.error || 'Failed to resend code');
+                    showError(error.error || 'Failed to resend code');
                 }
             } catch (error) {
-                showError('errorMessage', 'Failed to resend code. Please try again.');
+                showError('Failed to resend code. Please try again.');
             }
-            
-            hideLoading('resendLoading');
+
+            // Hide loading state
+            resendBtn.disabled = false;
+            btnText.style.display = 'block';
+            loading.classList.add('hidden');
         }
 
-        function showLoading(elementId) {
-            document.getElementById(elementId).style.display = 'block';
-        }
-
-        function hideLoading(elementId) {
-            document.getElementById(elementId).style.display = 'none';
-        }
-
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.style.display = 'block';
+        function showError(message) {
+            const element = document.getElementById('errorMessage');
+            const messageElement = element.querySelector('p');
+            messageElement.textContent = message;
+            element.classList.remove('hidden');
             setTimeout(() => {
-                element.style.display = 'none';
+                element.classList.add('hidden');
             }, 5000);
         }
 
         function showSuccess(message) {
             const element = document.getElementById('successMessage');
-            element.textContent = message;
-            element.style.display = 'block';
+            const messageElement = element.querySelector('p');
+            messageElement.textContent = message;
+            element.classList.remove('hidden');
             setTimeout(() => {
-                element.style.display = 'none';
+                element.classList.add('hidden');
             }, 5000);
         }
 
         function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
         }
     </script>
 </body>

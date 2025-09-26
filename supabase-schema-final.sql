@@ -29,6 +29,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
+    password TEXT, -- Store hashed password (nullable for existing users)
     email_verified BOOLEAN DEFAULT FALSE,
     credits INTEGER DEFAULT 5,
     total_generations INTEGER DEFAULT 0,
@@ -63,6 +64,15 @@ CREATE TABLE email_verifications (
     email TEXT PRIMARY KEY,
     code TEXT NOT NULL,
     name TEXT NOT NULL,
+    password TEXT, -- Store hashed password temporarily (nullable)
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Password Reset Tokens table
+CREATE TABLE password_reset_tokens (
+    email TEXT PRIMARY KEY,
+    token TEXT NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -3,383 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Placeholder Generator</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <title>VRC Cloud Instance Manager</title>
+    <link rel="icon" type="image/png" href="/VRC CIM Favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/preline@2.0.3/dist/preline.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .generator-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .dimensions-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .generate-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            width: 100%;
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .result-section {
-            margin-top: 30px;
-        }
-
-        .image-container {
-            background: white;
-            border: 2px dashed #e1e5e9;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .generated-image {
-            max-width: 100%;
-            max-height: 500px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .placeholder-text {
-            color: #666;
-            font-size: 1.1rem;
-        }
-
-        .url-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-
-        .url-input {
-            background: white;
-            border: 2px solid #e1e5e9;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            word-break: break-all;
-        }
-
-        .copy-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-weight: 600;
-        }
-
-        .copy-btn:hover {
-            background: #218838;
-        }
-
-        .examples {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-
-        .examples h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .example-link {
-            display: inline-block;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin: 5px;
-            border: 1px solid #e1e5e9;
-            transition: all 0.3s ease;
-        }
-
-        .example-link:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .loading {
-            display: none;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            color: #dc3545;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-        }
-    </style>
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎨 AI Image Placeholder</h1>
-            <p>Generate AI-powered placeholder images using text prompts</p>
-            <div style="margin-top: 20px;">
-                <a href="/auth" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; margin: 0 10px;">Sign Up / Login</a>
-                <a href="/dashboard" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; margin: 0 10px;">Dashboard</a>
+<body class="bg-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <img class="h-8 w-auto" src="/VRCCM Logo.png" alt="VRC Cloud Instance Manager">
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                                <a href="#features" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">Features</a>
+                                <a href="#demo" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">Try It</a>
+                                <a href="#about" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">About</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                            <a href="/auth" class="bg-gray-700 text-primary-400 border border-primary-600 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Sign In
+                    </a>
+                    <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Get Started
+                    </a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                            <button type="button" class="text-gray-400 hover:text-gray-200 hover:bg-gray-700 p-2 rounded-md" data-hs-collapse="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <svg class="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile menu -->
+            <div id="navbar-collapse" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:hidden">
+                <div class="py-2 md:py-0 space-y-1">
+                            <a href="#features" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">Features</a>
+                            <a href="#demo" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">Try It</a>
+                            <a href="#about" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">About</a>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <div class="content">
-            <div class="generator-section">
-                <h2>Generate New Image</h2>
-                <form id="imageForm">
-                    <div class="form-group">
-                        <label for="apiKey">API Key <span style="color: red;">*</span></label>
-                        <input type="text" id="apiKey" placeholder="Enter your API key (get one from dashboard)" required>
-                        <small style="color: #666; font-size: 12px;">Sign up for free to get your API key and 5 free credits!</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="prompt">Image Prompt</label>
-                        <textarea id="prompt" placeholder="Describe the image you want to generate... (e.g., 'a beautiful sunset over mountains', 'abstract art with vibrant colors')" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="dimensions-row">
-                        <div class="form-group">
-                            <label for="width">Width</label>
-                            <input type="number" id="width" value="600" min="1" max="4096">
-                        </div>
-                        <div class="form-group">
-                            <label for="height">Height</label>
-                            <input type="number" id="height" value="400" min="1" max="4096">
-                        </div>
-                    </div>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-primary-600 to-blue-700 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                    VRC Cloud Instance Manager
+                </h1>
+                <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+                    Create stunning AI-generated images from text descriptions inside your VRC instance, powered by cutting-edge AI technology
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/auth" class="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        Get Started Free
+                    </a>
+                    <a href="#demo" class="bg-primary-800 text-white hover:bg-primary-900 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        Try Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    <button type="submit" class="generate-btn">
-                        <span class="btn-text">Generate Image</span>
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            Generating AI image...
-                        </div>
-                    </button>
-                </form>
-
-                <div class="error" id="errorMessage"></div>
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Powerful AI Image Generation</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">Transform your VRC experience with our professional-grade AI image generation service</p>
             </div>
 
-            <div class="result-section">
-                <h3>Generated Image</h3>
-                <div class="image-container" id="imageContainer">
-                    <div class="placeholder-text">
-                        Enter a prompt and click "Generate Image" to create your AI placeholder
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                        <div class="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="bg-primary-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                            <h3 class="text-xl font-semibold text-white mb-4">AI-Powered Generation</h3>
+                            <p class="text-gray-300">Create stunning, unique images from simple text descriptions using advanced AI technology</p>
+                    <div class="mt-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            ✓ Available Now
+                        </span>
+                    </div>
+                            </div>
+
+                <!-- Feature 2 -->
+                        <div class="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="bg-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-4">Lightning Fast</h3>
+                            <p class="text-gray-300">Generate high-quality images in seconds with our optimized cloud infrastructure</p>
+                    <div class="mt-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            ⚡ Ultra Fast
+                        </span>
+                            </div>
+                        </div>
+                        
+                <!-- Feature 3 -->
+                        <div class="bg-gradient-to-br from-green-900 to-emerald-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        </div>
+                            <h3 class="text-xl font-semibold text-white mb-4">VRC Integration</h3>
+                            <p class="text-gray-300">Seamlessly integrate with VRChat using simple URL endpoints for real-time image generation</p>
+                    <div class="mt-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                            🎮 VRC Ready
+                        </span>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="url-section">
-                <h3>Direct URL</h3>
-                <p>Use this URL format to generate images directly:</p>
-                <input type="text" class="url-input" id="urlInput" readonly placeholder="URL will appear here...">
-                <button class="copy-btn" onclick="copyUrl()">Copy URL</button>
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 bg-gray-700">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Try It Now</h2>
+                <p class="text-xl text-gray-300">Test the AI Image Generator with your API key</p>
             </div>
 
-            <div class="examples">
-                <h3>Example URLs</h3>
-                <p>Try these example prompts (replace YOUR_API_KEY with your actual API key):</p>
-                <a href="/600x400.jpg?api_key=YOUR_API_KEY&text=a%20beautiful%20sunset" class="example-link">Sunset (600x400)</a>
-                <a href="/800x600.jpg?api_key=YOUR_API_KEY&text=abstract%20art%20with%20vibrant%20colors" class="example-link">Abstract Art (800x600)</a>
-                <a href="/400x400.jpg?api_key=YOUR_API_KEY&text=cute%20cat%20in%20a%20garden" class="example-link">Cute Cat (400x400)</a>
-                <a href="/1200x800.jpg?api_key=YOUR_API_KEY&text=modern%20cityscape%20at%20night" class="example-link">Cityscape (1200x800)</a>
-                <a href="/300x200.jpg?api_key=YOUR_API_KEY&text=minimalist%20design" class="example-link">Minimalist (300x200)</a>
+            <div class="bg-gray-800 rounded-2xl shadow-xl p-8">
+                <form id="demoForm" class="space-y-6">
+                    <!-- API Key Input -->
+                    <div>
+                                <label for="demoApiKey" class="block text-sm font-medium text-gray-300 mb-2">API Key <span class="text-red-400">*</span></label>
+                        <input type="text" id="demoApiKey" placeholder="Enter your API key (get one from dashboard)" required
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                                <p class="mt-2 text-sm text-gray-400">Sign up for free to get your API key and 5 free credits!</p>
+                        </div>
+                        
+                    <!-- Prompt Input -->
+                    <div>
+                                <label for="demoPrompt" class="block text-sm font-medium text-gray-300 mb-2">Image Prompt</label>
+                        <textarea id="demoPrompt" rows="3" placeholder="Describe the image you want to generate... (e.g., 'a beautiful sunset over mountains', 'abstract art with vibrant colors')"
+                                  class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"></textarea>
+                        </div>
+                        
+                    <!-- Dimensions -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                                    <label for="demoWidth" class="block text-sm font-medium text-gray-300 mb-2">Width</label>
+                            <input type="number" id="demoWidth" value="600" min="1" max="4096"
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                        </div>
+                        <div>
+                                    <label for="demoHeight" class="block text-sm font-medium text-gray-300 mb-2">Height</label>
+                            <input type="number" id="demoHeight" value="400" min="1" max="4096"
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                        </div>
+                    </div>
+                    
+                    <!-- Size Presets -->
+                    <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-3">Quick Size Presets:</label>
+                        <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="setSize(600, 400)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">600×400</button>
+                            <button type="button" onclick="setSize(800, 600)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">800×600</button>
+                            <button type="button" onclick="setSize(1024, 768)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1024×768</button>
+                            <button type="button" onclick="setSize(1920, 1080)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1920×1080</button>
+                            <button type="button" onclick="setSize(512, 512)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">512×512</button>
+                            <button type="button" onclick="setSize(1024, 1024)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1024×1024</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button type="submit" class="flex-1 bg-primary-600 text-white hover:bg-primary-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                <span class="btn-text">Generate AI Image</span>
+                            <div class="loading hidden flex items-center justify-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Generating...
+                                </div>
+                            </button>
+                            
+                        <button type="button" onclick="generateLink()" class="flex-1 bg-gray-600 text-white hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105">
+                            Generate Link
+                            </button>
+                        </div>
+                    </form>
+
+                <!-- Generated URL Section -->
+                <div id="linkSection" class="hidden mt-8 p-6 bg-gray-50 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Generated URL</h4>
+                    <div class="flex gap-3">
+                        <input type="text" id="generatedUrl" readonly
+                               class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg font-mono text-sm">
+                        <button onclick="copyUrl()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            Copy URL
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="demoErrorMessage" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-red-800"></p>
+                </div>
+            </div>
+
+            <!-- Generated Image Display -->
+            <div class="mt-8 bg-white rounded-2xl shadow-xl p-8">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">Generated Image</h4>
+                <div id="demoImageContainer" class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center min-h-[300px] flex items-center justify-center hover:border-primary-300 transition-colors">
+                    <div class="text-gray-500 text-lg">
+                            Enter a text prompt and click "Generate AI Image" to create your image
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-8">Powered by Advanced AI</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
+                    Our service uses cutting-edge AI technology to generate high-quality images that seamlessly integrate with your VRChat experience. Whether you're creating content for worlds, avatars, or interactive experiences, our AI delivers professional results every time.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        Start Creating Today
+                    </a>
+                    <a href="/ai-image-generator.html" class="bg-white text-primary-600 border-2 border-primary-600 hover:bg-primary-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105">
+                        AI Image Generator
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <img class="h-8 w-auto mx-auto mb-4" src="/VRCCM Logo.png" alt="VRC Cloud Instance Manager">
+                <p class="text-gray-400 mb-4">Cloud solutions to simplify VRC content management</p>
+                <div class="flex justify-center space-x-6">
+                    <a href="/auth" class="text-gray-400 hover:text-white transition-colors">Sign Up</a>
+                    <a href="/ai-image-generator.html" class="text-gray-400 hover:text-white transition-colors">AI Generator</a>
+                    <a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a>
+                </div>
+                <div class="mt-8 pt-8 border-t border-gray-800">
+                    <p class="text-gray-400 text-sm">© 2025 VRC Cloud Instance Manager. All rights reserved.</p>
             </div>
         </div>
     </div>
+    </footer>
 
     <script>
-        const form = document.getElementById('imageForm');
-        const promptInput = document.getElementById('prompt');
-        const widthInput = document.getElementById('width');
-        const heightInput = document.getElementById('height');
-        const imageContainer = document.getElementById('imageContainer');
-        const urlInput = document.getElementById('urlInput');
-        const errorMessage = document.getElementById('errorMessage');
-        const generateBtn = document.querySelector('.generate-btn');
-        const btnText = document.querySelector('.btn-text');
-        const loading = document.querySelector('.loading');
+        let demoApiKey = '';
 
-        // Update URL when inputs change
-        function updateUrl() {
-            const prompt = encodeURIComponent(promptInput.value || 'abstract art');
-            const width = widthInput.value;
-            const height = heightInput.value;
-            const apiKey = document.getElementById('apiKey').value;
-            
-            if (apiKey) {
-                urlInput.value = `${window.location.origin}/${width}x${height}.jpg?api_key=${apiKey}&text=${prompt}`;
-            } else {
-                urlInput.value = `${window.location.origin}/${width}x${height}.jpg?api_key=YOUR_API_KEY&text=${prompt}`;
+        // Load demo API key on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadDemoApiKey();
+        });
+
+        async function loadDemoApiKey() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                demoApiKey = data.demo_api_key || 'ai_demo123456789';
+            } catch (error) {
+                console.error('Error loading demo API key:', error);
+                demoApiKey = 'ai_demo123456789';
             }
         }
 
-        document.getElementById('apiKey').addEventListener('input', updateUrl);
-        promptInput.addEventListener('input', updateUrl);
-        widthInput.addEventListener('input', updateUrl);
-        heightInput.addEventListener('input', updateUrl);
+        const demoForm = document.getElementById('demoForm');
+        const demoApiKeyInput = document.getElementById('demoApiKey');
+        const demoPromptInput = document.getElementById('demoPrompt');
+        const demoWidthInput = document.getElementById('demoWidth');
+        const demoHeightInput = document.getElementById('demoHeight');
+        const demoImageContainer = document.getElementById('demoImageContainer');
+        const demoErrorMessage = document.getElementById('demoErrorMessage');
+        const demoGenerateBtn = demoForm.querySelector('button[type="submit"]');
+        const demoBtnText = demoForm.querySelector('.btn-text');
+        const demoLoading = demoForm.querySelector('.loading');
+        const linkSection = document.getElementById('linkSection');
+        const generatedUrlInput = document.getElementById('generatedUrl');
 
-        // Initial URL update
-        updateUrl();
-
-        form.addEventListener('submit', async (e) => {
+        demoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const prompt = promptInput.value || 'abstract art';
-            const width = widthInput.value;
-            const height = heightInput.value;
-            const apiKey = document.getElementById('apiKey').value;
+            const apiKey = demoApiKeyInput.value.trim();
+            const prompt = demoPromptInput.value || 'abstract art';
+            const width = demoWidthInput.value;
+            const height = demoHeightInput.value;
 
             if (!apiKey) {
-                errorMessage.textContent = 'Please enter your API key';
-                errorMessage.style.display = 'block';
+                showError('Please enter your API key.');
                 return;
             }
 
             // Show loading state
-            generateBtn.disabled = true;
-            btnText.style.display = 'none';
-            loading.style.display = 'block';
-            errorMessage.style.display = 'none';
+            demoGenerateBtn.disabled = true;
+            demoBtnText.style.display = 'none';
+            demoLoading.classList.remove('hidden');
+            hideError();
 
             try {
                 const url = `/${width}x${height}.jpg?api_key=${apiKey}&text=${encodeURIComponent(prompt)}`;
                 
                 // Create image element
                 const img = new Image();
-                img.className = 'generated-image';
+                img.className = 'max-w-full max-h-96 rounded-lg shadow-lg';
                 
                 img.onload = function() {
-                    imageContainer.innerHTML = '';
-                    imageContainer.appendChild(img);
-                    
-                    // Update URL input
-                    urlInput.value = window.location.origin + url;
+                    demoImageContainer.innerHTML = '';
+                    demoImageContainer.appendChild(img);
                     
                     // Hide loading
-                    generateBtn.disabled = false;
-                    btnText.style.display = 'block';
-                    loading.style.display = 'none';
+                    demoGenerateBtn.disabled = false;
+                    demoBtnText.style.display = 'block';
+                    demoLoading.classList.add('hidden');
                 };
 
                 img.onerror = function() {
@@ -390,34 +371,71 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                errorMessage.textContent = 'Failed to generate image. Please try again.';
-                errorMessage.style.display = 'block';
+                showError('Failed to generate image. Please check your API key and try again.');
                 
                 // Hide loading
-                generateBtn.disabled = false;
-                btnText.style.display = 'block';
-                loading.style.display = 'none';
+                demoGenerateBtn.disabled = false;
+                demoBtnText.style.display = 'block';
+                demoLoading.classList.add('hidden');
             }
         });
 
+        // Generate Link function
+        function generateLink() {
+            const apiKey = demoApiKeyInput.value.trim();
+            const prompt = demoPromptInput.value || 'abstract art';
+            const width = demoWidthInput.value;
+            const height = demoHeightInput.value;
+
+            if (!apiKey) {
+                showError('Please enter your API key.');
+                return;
+            }
+
+            const baseUrl = window.location.origin;
+            const url = `${baseUrl}/${width}x${height}.jpg?api_key=${apiKey}&text=${encodeURIComponent(prompt)}`;
+            
+            generatedUrlInput.value = url;
+            linkSection.classList.remove('hidden');
+            hideError();
+        }
+
+        // Copy URL function
         function copyUrl() {
-            urlInput.select();
-            urlInput.setSelectionRange(0, 99999); // For mobile devices
+            generatedUrlInput.select();
+            generatedUrlInput.setSelectionRange(0, 99999);
             
             try {
                 document.execCommand('copy');
-                const copyBtn = document.querySelector('.copy-btn');
+                const copyBtn = event.target;
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = 'Copied!';
-                copyBtn.style.background = '#28a745';
+                copyBtn.className = copyBtn.className.replace('bg-green-600', 'bg-green-500');
                 
                 setTimeout(() => {
                     copyBtn.textContent = originalText;
-                    copyBtn.style.background = '#28a745';
+                    copyBtn.className = copyBtn.className.replace('bg-green-500', 'bg-green-600');
                 }, 2000);
             } catch (err) {
-                console.error('Failed to copy URL:', err);
+                console.error('Failed to copy: ', err);
             }
+        }
+
+        // Set size function for preset buttons
+        function setSize(width, height) {
+            document.getElementById('demoWidth').value = width;
+            document.getElementById('demoHeight').value = height;
+        }
+
+        // Error handling functions
+        function showError(message) {
+            const errorElement = demoErrorMessage.querySelector('p');
+            errorElement.textContent = message;
+            demoErrorMessage.classList.remove('hidden');
+        }
+
+        function hideError() {
+            demoErrorMessage.classList.add('hidden');
         }
 
         // Load example from URL parameters if present
@@ -427,15 +445,29 @@
         
         if (textParam || dimensionsMatch) {
             if (textParam) {
-                promptInput.value = decodeURIComponent(textParam);
+                demoPromptInput.value = decodeURIComponent(textParam);
             }
             if (dimensionsMatch) {
-                widthInput.value = dimensionsMatch[1];
-                heightInput.value = dimensionsMatch[2];
+                demoWidthInput.value = dimensionsMatch[1];
+                demoHeightInput.value = dimensionsMatch[2];
             }
-            updateUrl();
-            form.dispatchEvent(new Event('submit'));
+            demoForm.dispatchEvent(new Event('submit'));
         }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
     </script>
+    <script src="/admin.js"></script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="80" fill="#000000"/>
+  
+  <!-- Cloud Icon -->
+  <g transform="translate(20, 20)">
+    <path d="M15 25c-2.5 0-4.5 2-4.5 4.5s2 4.5 4.5 4.5h15c2.5 0 4.5-2 4.5-4.5s-2-4.5-4.5-4.5c-1-2.5-3.5-4-6-4s-5 1.5-6 4z" fill="#ffffff"/>
+  </g>
+  
+  <!-- Gear Icon - Improved Design -->
+  <g transform="translate(45, 25)">
+    <!-- Outer gear circle -->
+    <circle cx="15" cy="15" r="12" fill="#60A5FA" stroke="#ffffff" stroke-width="1"/>
+    
+    <!-- Gear teeth -->
+    <g fill="#ffffff">
+      <!-- Top tooth -->
+      <rect x="13" y="2" width="4" height="6" rx="1"/>
+      <!-- Bottom tooth -->
+      <rect x="13" y="22" width="4" height="6" rx="1"/>
+      <!-- Left tooth -->
+      <rect x="2" y="13" width="6" height="4" rx="1"/>
+      <!-- Right tooth -->
+      <rect x="22" y="13" width="6" height="4" rx="1"/>
+      <!-- Top-left tooth -->
+      <rect x="6" y="6" width="3" height="3" rx="0.5"/>
+      <!-- Top-right tooth -->
+      <rect x="21" y="6" width="3" height="3" rx="0.5"/>
+      <!-- Bottom-left tooth -->
+      <rect x="6" y="21" width="3" height="3" rx="0.5"/>
+      <!-- Bottom-right tooth -->
+      <rect x="21" y="21" width="3" height="3" rx="0.5"/>
+    </g>
+    
+    <!-- Center hole -->
+    <circle cx="15" cy="15" r="4" fill="#60A5FA"/>
+    <!-- Inner dot -->
+    <circle cx="15" cy="15" r="1.5" fill="#ffffff"/>
+  </g>
+  
+  <!-- VRC Cloud Text -->
+  <text x="80" y="35" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#60A5FA">VRC Cloud</text>
+  
+  <!-- Instance Manager Text -->
+  <text x="80" y="55" font-family="Inter, sans-serif" font-size="14" font-weight="400" fill="#ffffff">Instance Manager</text>
+</svg>

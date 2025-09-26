@@ -1,10 +1,40 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="white">🎨</text>
+  <!-- Background -->
+  <rect width="32" height="32" fill="#000000"/>
+  
+  <!-- Cloud Icon -->
+  <g transform="translate(4, 8)">
+    <path d="M6 8c-1 0-1.8 0.8-1.8 1.8s0.8 1.8 1.8 1.8h6c1 0 1.8-0.8 1.8-1.8s-0.8-1.8-1.8-1.8c-0.4-1-1.4-1.6-2.4-1.6s-2 0.6-2.4 1.6z" fill="#ffffff"/>
+  </g>
+  
+  <!-- Gear Icon - Improved Design -->
+  <g transform="translate(12, 6)">
+    <!-- Outer gear circle -->
+    <circle cx="8" cy="8" r="6" fill="#60A5FA" stroke="#ffffff" stroke-width="0.5"/>
+    
+    <!-- Gear teeth -->
+    <g fill="#ffffff">
+      <!-- Top tooth -->
+      <rect x="7" y="1" width="2" height="3" rx="0.5"/>
+      <!-- Bottom tooth -->
+      <rect x="7" y="12" width="2" height="3" rx="0.5"/>
+      <!-- Left tooth -->
+      <rect x="1" y="7" width="3" height="2" rx="0.5"/>
+      <!-- Right tooth -->
+      <rect x="12" y="7" width="3" height="2" rx="0.5"/>
+      <!-- Top-left tooth -->
+      <rect x="3" y="3" width="1.5" height="1.5" rx="0.25"/>
+      <!-- Top-right tooth -->
+      <rect x="11.5" y="3" width="1.5" height="1.5" rx="0.25"/>
+      <!-- Bottom-left tooth -->
+      <rect x="3" y="11.5" width="1.5" height="1.5" rx="0.25"/>
+      <!-- Bottom-right tooth -->
+      <rect x="11.5" y="11.5" width="1.5" height="1.5" rx="0.25"/>
+    </g>
+    
+    <!-- Center hole -->
+    <circle cx="8" cy="8" r="2" fill="#60A5FA"/>
+    <!-- Inner dot -->
+    <circle cx="8" cy="8" r="0.75" fill="#ffffff"/>
+  </g>
 </svg>

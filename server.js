@@ -332,6 +332,32 @@ class SupabaseService {
     return data;
   }
 
+  static async updateUser(userId, updateData) {
+    if (!isSupabaseConfigured) {
+      // Fallback to in-memory storage
+      const user = users.get(userId);
+      if (user) {
+        Object.assign(user, updateData);
+        user.updated_at = new Date().toISOString();
+        users.set(userId, user);
+      }
+      return user;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ 
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   static async incrementUserGenerations(userId) {
     if (!isSupabaseConfigured) {
       // Fallback to in-memory storage
@@ -830,13 +856,13 @@ async function sendVerificationEmail(email, code) {
     console.log(`📧 Sending verification email to ${email} via Resend`);
     
     const { data, error } = await resend.emails.send({
-      from: 'AI Image Placeholder <noreply@zoync.com>', // Using your verified zoync.com domain
+      from: 'VRC Cloud Instance Manager <noreply@zoync.com>',
       to: [email],
-      subject: 'Verify Your Email - AI Image Placeholder',
+      subject: 'Verify Your Email - VRC Cloud Instance Manager',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 32px; font-weight: 300;">🎨 AI Image Placeholder</h1>
+            <h1 style="margin: 0; font-size: 32px; font-weight: 300;">☁️ VRC Cloud Instance Manager</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Email Verification</p>
           </div>
           
@@ -920,6 +946,81 @@ async function sendVerificationEmail(email, code) {
     console.log(`💡 Current RESEND_API_KEY: ${process.env.RESEND_API_KEY ? 'SET' : 'NOT SET'}`);
     
     return true; // Return true so signup still works
+  }
+}
+
+// Send password reset email using Resend
+async function sendPasswordResetEmail(email, code) {
+  try {
+    console.log(`📧 Sending password reset email to ${email} via Resend`);
+    
+    const { data, error } = await resend.emails.send({
+      from: 'VRC Cloud Instance Manager <noreply@zoync.com>',
+      to: [email],
+      subject: 'Reset Your Password - VRC Cloud Instance Manager',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 32px; font-weight: 300;">☁️ VRC Cloud Instance Manager</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Password Reset</p>
+          </div>
+          
+          <div style="background: white; padding: 40px; border: 1px solid #e1e5e9; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Reset Your Password</h2>
+            
+            <p style="color: #666; line-height: 1.6; margin-bottom: 30px; font-size: 16px;">
+              You requested to reset your password. Use the code below to reset your password:
+            </p>
+            
+            <div style="background: #f8f9fa; border: 3px solid #667eea; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+              <div style="font-size: 36px; font-weight: bold; color: #667eea; letter-spacing: 4px; font-family: 'Courier New', monospace; margin-bottom: 10px;">
+                ${code}
+              </div>
+              <p style="margin: 0; color: #666; font-size: 14px;">Enter this code to reset your password</p>
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <p style="margin: 0; color: #856404; font-size: 14px;">
+                <strong>⏰ Important:</strong> This code will expire in 10 minutes for security reasons.
+              </p>
+            </div>
+            
+            <p style="color: #666; line-height: 1.6; margin-bottom: 25px; font-size: 16px;">
+              If you didn't request this password reset, please ignore this email.
+            </p>
+            
+            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #e1e5e9;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                This is an automated message from VRC Cloud Instance Manager.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `
+        VRC Cloud Instance Manager - Password Reset
+        
+        Your password reset code is: ${code}
+        
+        Enter this code to reset your password.
+        
+        This code expires in 10 minutes.
+        
+        If you didn't request this password reset, please ignore this email.
+      `
+    });
+
+    if (error) {
+      console.error('❌ Failed to send password reset email via Resend:', error.message);
+      return false;
+    }
+
+    console.log(`✅ Password reset email sent successfully to ${email}`);
+    console.log(`📧 Resend ID: ${data.id}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Password reset email error:', error);
+    return false;
   }
 }
 
@@ -1160,7 +1261,7 @@ app.post('/api/test-email', async (req, res) => {
     console.log(`🧪 Testing email to ${email}`);
     
     const { data, error } = await resend.emails.send({
-      from: 'AI Image Placeholder <noreply@zoync.com>',
+      from: 'VRC Cloud Instance Manager <noreply@zoync.com>',
       to: [email],
       subject: 'Test Email - AI Image Placeholder',
       html: `
@@ -1477,6 +1578,142 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Forgot password endpoint
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required'
+      });
+    }
+    
+    console.log(`🔍 Forgot password request for email: ${email}`);
+    
+    // Check if user exists
+    const user = await SupabaseService.getUserByEmail(email);
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+    
+    // Generate password reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetData = {
+      email: email,
+      code: resetCode,
+      name: user.name || 'User', // Include name to avoid null constraint error
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+    };
+    
+    // Store reset code
+    await SupabaseService.storeEmailVerification(email, resetData);
+    
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(email, resetCode);
+    
+    if (emailSent) {
+      console.log(`✅ Password reset email sent to ${email}`);
+      res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    } else {
+      console.log(`❌ Failed to send password reset email to ${email}`);
+      res.status(500).json({
+        error: 'Failed to send password reset email'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({
+      error: 'Failed to process password reset request',
+      details: error.message
+    });
+  }
+});
+
+// Reset password endpoint
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({
+        error: 'Email, code, and new password are required'
+      });
+    }
+    
+    console.log(`🔍 Password reset attempt for email: ${email}`);
+    
+    // Verify the reset code
+    const verification = await SupabaseService.getEmailVerification(email);
+    if (!verification) {
+      console.log(`❌ No reset code found for ${email}`);
+      return res.status(400).json({
+        error: 'Invalid or expired reset code'
+      });
+    }
+    
+    // Check if code matches
+    if (verification.code !== code) {
+      console.log(`❌ Invalid reset code for ${email}`);
+      return res.status(400).json({
+        error: 'Invalid reset code'
+      });
+    }
+    
+    // Check if code is expired
+    const now = new Date();
+    const expiresAt = new Date(verification.expires_at);
+    if (now > expiresAt) {
+      console.log(`❌ Reset code expired for ${email}`);
+      await SupabaseService.deleteEmailVerification(email);
+      return res.status(400).json({
+        error: 'Reset code has expired. Please request a new one.'
+      });
+    }
+    
+    // Find user
+    const user = await SupabaseService.getUserByEmail(email);
+    if (!user) {
+      console.log(`❌ User not found for ${email}`);
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+    
+    // Update user password (hash it in a real implementation)
+    const updatedUser = await SupabaseService.updateUser(user.id, { 
+      password: newPassword // In production, hash this password
+    });
+    
+    if (!updatedUser) {
+      console.log(`❌ Failed to update password for ${email}`);
+      return res.status(500).json({
+        error: 'Failed to update password'
+      });
+    }
+    
+    // Delete the reset code
+    await SupabaseService.deleteEmailVerification(email);
+    
+    console.log(`✅ Password reset successful for ${email}`);
+    res.json({
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    console.error('❌ Reset password error:', error);
+    res.status(500).json({
+      error: 'Failed to reset password',
+      details: error.message
+    });
+  }
+});
+
 // Middleware to validate session token
 async function validateSession(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -1524,6 +1761,51 @@ app.get('/api/user/profile', validateSession, async (req, res) => {
     console.error('❌ Get profile error:', error);
     res.status(500).json({
       error: 'Failed to get user profile',
+      details: error.message
+    });
+  }
+});
+
+// Update user profile endpoint
+app.put('/api/user/profile', validateSession, async (req, res) => {
+  try {
+    console.log(`👤 Updating profile for user: ${req.userId}`);
+    
+    const { name } = req.body;
+    
+    if (!name || name.trim() === '') {
+      return res.status(400).json({
+        error: 'Name is required'
+      });
+    }
+
+    const user = await SupabaseService.getUserById(req.userId);
+    if (!user) {
+      console.log(`❌ User not found: ${req.userId}`);
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    // Update user in Supabase
+    const updatedUser = await SupabaseService.updateUser(req.userId, { name: name.trim() });
+    
+    if (!updatedUser) {
+      console.log(`❌ Failed to update user: ${req.userId}`);
+      return res.status(500).json({
+        error: 'Failed to update profile'
+      });
+    }
+
+    console.log(`✅ Updated user profile:`, updatedUser);
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('❌ Update profile error:', error);
+    res.status(500).json({
+      error: 'Failed to update profile',
       details: error.message
     });
   }

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRC CIM - Settings</title>
+    <link rel="icon" type="image/png" href="/VRC CIM Favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/preline@2.0.3/dist/preline.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        stripe: {
+                            purple: '#635bff',
+                            'purple-dark': '#4f46e5',
+                            'purple-light': '#8b5cf6',
+                            blue: '#00d4ff',
+                            'blue-dark': '#0099cc',
+                            gray: '#f6f9fc',
+                            'gray-dark': '#6772e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-900 min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 border-r border-gray-700 fixed h-screen overflow-y-auto z-50" id="sidebar">
+            <!-- Logo Section -->
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center">
+                    <img src="/VRCCM Logo.png" alt="Logo" class="h-8 w-auto">
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div class="p-4 border-b border-gray-700" id="userInfo" style="display: none;">
+                <div class="flex items-center mb-3">
+                    <div>
+                        <div class="text-sm font-semibold text-white" id="userEmail">user@example.com</div>
+                        <div class="text-xs text-gray-400">User</div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-300">Credits:</span>
+                    <span class="font-semibold text-green-600" id="userCredits">0</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-2">
+                <!-- Tools Section -->
+                <div class="mb-6">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Tools</div>
+                    <div class="space-y-1">
+                        <a href="/ai-image-generator.html" class="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            AI Text to Image Generator
+                        </a>
+                        <a href="/api-keys.html" class="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                            </svg>
+                            API Keys
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Account Section -->
+                <div class="mb-6">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account</div>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center px-3 py-2 bg-stripe-purple text-white rounded-lg">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Settings
+                        </a>
+                        <a href="https://discord.gg/FQmjpxtM" target="_blank" class="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.0019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9554 2.4189-2.1568 2.4189Z"/>
+                            </svg>
+                            Help
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Logout Button -->
+                <button onclick="logout()" class="w-full flex items-center px-3 py-2 text-red-400 hover:bg-red-900 rounded-lg transition-colors mt-6">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Logout
+                </button>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <div class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button class="lg:hidden bg-stripe-purple text-white px-3 py-2 rounded-lg mr-4" onclick="toggleSidebar()">
+                            ☰ Menu
+                        </button>
+                        <h1 class="text-2xl font-bold text-white">Settings</h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 bg-gray-900">
+                <!-- Account Information -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-white mb-6">Account Information</h2>
+
+                    <form id="accountForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                                <input type="email" id="email" readonly
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-400 rounded-lg cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label for="displayName" class="block text-sm font-medium text-gray-300 mb-2">Display Name</label>
+                                <input type="text" id="displayName" placeholder="Enter your display name"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="accountType" class="block text-sm font-medium text-gray-300 mb-2">Account Type</label>
+                                <input type="text" id="accountType" readonly value="User"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-400 rounded-lg cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label for="memberSince" class="block text-sm font-medium text-gray-300 mb-2">Member Since</label>
+                                <input type="text" id="memberSince" readonly
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-400 rounded-lg cursor-not-allowed">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-stripe-purple hover:bg-stripe-purple-dark text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Usage Statistics -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-white mb-6">Usage Statistics</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-300">Credits Remaining</h3>
+                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-white" id="creditsCount">0</div>
+                        </div>
+
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-300">Total Generations</h3>
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-white" id="generationsCount">0</div>
+                        </div>
+
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-300">API Keys</h3>
+                                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-white" id="apiKeysCount">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Security -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-white mb-6">Account Security</h2>
+
+                    <form id="passwordForm" class="space-y-6">
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter your current password"
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="newPassword" class="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                                <input type="password" id="newPassword" placeholder="Enter new password"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors">
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        // Global variables
+        let userData = null;
+
+        // Load user data
+        async function loadUserData() {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+
+                    // Update sidebar user info
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userEmail').textContent = userData.email;
+                    document.getElementById('userCredits').textContent = userData.credits;
+
+                    // Populate form fields
+                    document.getElementById('email').value = userData.email;
+                    document.getElementById('displayName').value = userData.name || '';
+                    document.getElementById('memberSince').value = new Date(userData.created_at).toLocaleDateString();
+
+                    // Update statistics
+                    document.getElementById('creditsCount').textContent = userData.credits;
+                    document.getElementById('generationsCount').textContent = userData.total_generations || 0;
+
+                    // Load API keys count
+                    await loadApiKeysCount();
+                } else {
+                    localStorage.removeItem('userToken');
+                    window.location.href = '/auth';
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                localStorage.removeItem('userToken');
+                window.location.href = '/auth';
+            }
+        }
+
+        // Load API keys count
+        async function loadApiKeysCount() {
+            const token = localStorage.getItem('userToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/user/api-keys', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const apiKeys = data.api_keys || [];
+                    document.getElementById('apiKeysCount').textContent = apiKeys.length;
+                }
+            } catch (error) {
+                console.error('Error loading API keys:', error);
+            }
+        }
+
+        // Save account information
+        document.getElementById('accountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const token = localStorage.getItem('userToken');
+            if (!token) return;
+
+            const displayName = document.getElementById('displayName').value;
+
+            try {
+                const response = await fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: displayName
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Profile updated successfully!', 'success');
+                } else {
+                    showNotification('Failed to update profile', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showNotification('Error updating profile', 'error');
+            }
+        });
+
+        // Change password
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showNotification('Password must be at least 8 characters long', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('userToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/user/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Password changed successfully!', 'success');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showNotification('Error changing password', 'error');
+            }
+        });
+
+
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+
+            if (type === 'success') {
+                notification.className += ' bg-green-600';
+            } else if (type === 'error') {
+                notification.className += ' bg-red-600';
+            } else {
+                notification.className += ' bg-blue-600';
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Slide in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            // Slide out and remove
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            window.location.href = '/auth';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserData();
+        });
+    </script>
+    <script src="/admin.js"></script>
+</body>
+</html>

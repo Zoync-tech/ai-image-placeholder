@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VRC Cloud Instance Manager - Dashboard</title>
+    <title>VRC CIM - AI Text to Image Generator</title>
     <link rel="icon" type="image/png" href="/VRC CIM Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/admin.css">
@@ -48,7 +48,7 @@
             <div class="p-6 border-b border-gray-700">
                 <div class="flex items-center">
                     <img src="/VRCCM Logo.png" alt="Logo" class="h-8 w-auto">
-        </div>
+                </div>
             </div>
 
             <!-- User Profile -->
@@ -57,13 +57,13 @@
                     <div>
                         <div class="text-sm font-semibold text-white" id="userEmail">user@example.com</div>
                         <div class="text-xs text-gray-400">User</div>
-                </div>
                     </div>
+                </div>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-300">Credits:</span>
                     <span class="font-semibold text-green-600" id="userCredits">0</span>
-                    </div>
                 </div>
+            </div>
 
             <!-- Navigation -->
             <nav class="p-4 space-y-2">
@@ -71,7 +71,7 @@
                 <div class="mb-6">
                     <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Tools</div>
                     <div class="space-y-1">
-                        <a href="/ai-image-generator.html" class="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
+                        <a href="#" class="flex items-center px-3 py-2 bg-stripe-purple text-white rounded-lg">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
@@ -83,8 +83,8 @@
                             </svg>
                             API Keys
                         </a>
+                    </div>
                 </div>
-            </div>
 
                 <!-- Account Section -->
                 <div class="mb-6">
@@ -103,9 +103,9 @@
                             </svg>
                             Help
                         </a>
-                        </div>
                     </div>
-                    
+                </div>
+
                 <!-- Logout Button -->
                 <button onclick="logout()" class="w-full flex items-center px-3 py-2 text-red-400 hover:bg-red-900 rounded-lg transition-colors mt-6">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@
                     Logout
                 </button>
             </nav>
-                    </div>
+        </div>
 
         <!-- Main Content -->
         <div class="flex-1 ml-64">
@@ -124,33 +124,163 @@
                     <div class="flex items-center">
                         <button class="lg:hidden bg-stripe-purple text-white px-3 py-2 rounded-lg mr-4" onclick="toggleSidebar()">
                             ☰ Menu
-                            </button>
-                        <h1 class="text-2xl font-bold text-white">Today</h1>
-                        </div>
-                        </div>
+                        </button>
+                        <h1 class="text-2xl font-bold text-white">AI Text to Image Generator</h1>
                     </div>
-
+                </div>
+            </div>
 
             <!-- Content -->
             <div class="p-6 bg-gray-900">
 
-                <!-- User Info Section -->
-                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8" id="userInfoMain" style="display: none;">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-white">Welcome, <span id="userEmailMain"></span>!</h3>
-                        <div class="flex items-center space-x-4 text-sm text-gray-300">
-                            <span>Credits: <span class="font-semibold text-green-600" id="userCreditsMain">0</span></span>
-                            <span>Generations: <span class="font-semibold" id="totalGenerations">0</span></span>
+                <!-- Demo Generator Section -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold text-white">Demo Generator</h2>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-stripe-purple rounded-full"></div>
+                            <span class="text-sm text-gray-300">Test Your API</span>
                         </div>
                     </div>
-                    <div class="text-sm text-gray-400">Account Created: <span id="accountCreated"></span></div>
-            </div>
 
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Left Panel: Form Controls -->
+                        <div class="space-y-6">
+                            <form id="demoForm" class="space-y-6">
+                                <!-- Image Prompt -->
+                                <div>
+                                    <label for="demoPrompt" class="block text-sm font-medium text-gray-300 mb-2">Image Prompt</label>
+                                    <textarea id="demoPrompt" rows="4" placeholder="Describe the image you want to generate..."
+                                              class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors"
+                                              oninput="updateLivePreview()"></textarea>
+                                </div>
 
+                                <!-- Dimensions -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="demoWidth" class="block text-sm font-medium text-gray-300 mb-2">Width</label>
+                                        <input type="number" id="demoWidth" value="600" min="1" max="4096"
+                                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors"
+                                               oninput="updateLivePreview()">
+                                    </div>
+                                    <div>
+                                        <label for="demoHeight" class="block text-sm font-medium text-gray-300 mb-2">Height</label>
+                                        <input type="number" id="demoHeight" value="400" min="1" max="4096"
+                                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-stripe-purple focus:border-stripe-purple transition-colors"
+                                               oninput="updateLivePreview()">
+                                    </div>
+                                </div>
+
+                                <!-- Quick Size Presets -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-3">Quick Size Presets:</label>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <button type="button" onclick="setSize(600, 400)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">600×400</button>
+                                        <button type="button" onclick="setSize(800, 600)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">800×600</button>
+                                        <button type="button" onclick="setSize(1024, 768)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×768</button>
+                                        <button type="button" onclick="setSize(1920, 1080)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1920×1080</button>
+                                        <button type="button" onclick="setSize(512, 512)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">512×512</button>
+                                        <button type="button" onclick="setSize(1024, 1024)" class="px-3 py-2 bg-gray-700 hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×1024</button>
+                                    </div>
+                                </div>
+
+                                <!-- Live URL Preview -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Live URL Preview:</label>
+                                    <div class="bg-green-900 border border-green-700 rounded-lg p-4 relative group">
+                                        <div class="text-xs font-mono text-green-200 break-all pr-10" id="liveUrlPreview">
+                                            Loading...
+                                        </div>
+                                        <button onclick="copyLiveUrl()" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-green-700 hover:bg-green-600 p-1 rounded">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="space-y-3">
+                                    <button type="submit" class="w-full bg-stripe-purple text-white hover:bg-stripe-purple-dark py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                        <span class="btn-text">Generate AI Image</span>
+                                        <div class="loading hidden flex items-center justify-center">
+                                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Generating...
+                                        </div>
+                                    </button>
+                                    <button type="button" onclick="copyLiveUrl()" class="w-full bg-gray-600 text-white hover:bg-gray-700 py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105">
+                                        Copy Current URL
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right Panel: Generated Image & Info -->
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-white">Generated Image</h4>
+                                <div class="flex items-center space-x-2 text-sm text-gray-400">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                    <span>Ready</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Display -->
+                            <div id="demoImageContainer" class="bg-gray-700 border-2 border-dashed border-gray-600 rounded-xl p-6 text-center min-h-[400px] flex items-center justify-center hover:border-stripe-purple transition-colors">
+                                <div class="text-gray-400">
+                                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">Your generated image will appear here</p>
+                                    <p class="text-sm mt-2">Enter a prompt and click "Generate AI Image"</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Info Panel -->
+                            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                                <h5 class="text-sm font-semibold text-white mb-3">Image Details</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Dimensions:</span>
+                                        <span class="text-white" id="currentDimensions">600×400</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Format:</span>
+                                        <span class="text-white">JPEG</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Status:</span>
+                                        <span class="text-green-400" id="imageStatus">Ready</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
                     </div>
+                </div>
+
+                <!-- Image History Section -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold text-white">Image History</h2>
+                        <button onclick="loadImageGenerations()" class="text-stripe-purple hover:text-stripe-purple-dark text-sm font-medium">
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div id="imageHistoryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div class="col-span-full text-center py-8 text-gray-400">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-stripe-purple mx-auto mb-4"></div>
+                            Loading image history...
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
 
     <script>
         // Toggle sidebar for mobile
@@ -174,54 +304,46 @@
             }
 
             try {
-                    const response = await fetch('/api/user/profile', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
                 console.log('User profile response:', response.status, response.ok);
-                    if (response.ok) {
+                if (response.ok) {
                     userData = await response.json();
                     console.log('User data loaded:', userData);
-                    
+
                     // Update sidebar user info
                     document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('userEmail').textContent = userData.email;
                     document.getElementById('userCredits').textContent = userData.credits;
-                    
-                    // Update main user info
-                    document.getElementById('userInfoMain').style.display = 'block';
-                    document.getElementById('userEmailMain').textContent = userData.email;
-                    document.getElementById('userCreditsMain').textContent = userData.credits;
-                        document.getElementById('totalGenerations').textContent = userData.total_generations || 0;
-                        document.getElementById('accountCreated').textContent = new Date(userData.created_at).toLocaleDateString();
-                    
+
                     // Only load API keys and image history on initial load, not on auto-refresh
                     if (!window.initialLoadComplete) {
                         console.log('Loading API keys...');
                         await loadApiKeys();
-                        
+
                         console.log('Loading image history...');
                         await loadImageGenerations();
                         window.initialLoadComplete = true;
                     }
-                    } else {
+                } else {
                     console.error('Failed to load user profile:', response.status, response.statusText);
                     localStorage.removeItem('userToken');
                     window.location.href = '/auth';
-                    }
-                } catch (error) {
+                }
+            } catch (error) {
                 console.error('Error loading user data:', error);
                 localStorage.removeItem('userToken');
                 window.location.href = '/auth';
             }
         }
 
-        // Load API keys
+        // Load API keys for demo functionality
         async function loadApiKeys() {
             const token = localStorage.getItem('userToken');
-            console.log('Loading API keys, token:', token ? 'exists' : 'missing');
             if (!token) return;
 
             try {
@@ -231,69 +353,17 @@
                     }
                 });
 
-                console.log('API keys response:', response.status, response.ok);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('API keys data:', data);
                     const apiKeys = data.api_keys || [];
                     if (apiKeys.length > 0) {
                         userApiKey = apiKeys[0].api_key || apiKeys[0].key;
-                        console.log('Setting API key:', userApiKey);
-                        document.getElementById('noApiKey').style.display = 'none';
-                        document.getElementById('apiKeySection').style.display = 'block';
-                        document.getElementById('apiKeyDisplay').textContent = userApiKey;
-                        
-                        // Update URL display
-                        const baseUrl = window.location.origin;
-                        const sampleUrl = `${baseUrl}/600x400.jpg?api_key=${userApiKey}&text=your+prompt`;
-                        document.getElementById('urlDisplay').textContent = sampleUrl;
-                    } else {
-                        console.log('No API keys found, creating new one');
-                        // Create new API key
-                        await createApiKey();
+                        // Update live preview with real API key
+                        updateLivePreview();
                     }
-                } else {
-                    console.error('Failed to load API keys:', response.status, response.statusText);
                 }
             } catch (error) {
                 console.error('Error loading API keys:', error);
-            }
-        }
-
-        // Create new API key
-        async function createApiKey() {
-            const token = localStorage.getItem('userToken');
-            if (!token) return;
-
-            document.getElementById('noApiKey').style.display = 'block';
-            
-            try {
-                const response = await fetch('/api/create-key', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const newApiKey = await response.json();
-                    userApiKey = newApiKey.api_key;
-                    document.getElementById('noApiKey').style.display = 'none';
-                    document.getElementById('apiKeySection').style.display = 'block';
-                    document.getElementById('apiKeyDisplay').textContent = userApiKey;
-                    
-                    // Update URL display
-                    const baseUrl = window.location.origin;
-                    const sampleUrl = `${baseUrl}/600x400.jpg?api_key=${userApiKey}&text=your+prompt`;
-                    document.getElementById('urlDisplay').textContent = sampleUrl;
-                } else {
-                    console.error('Failed to create API key');
-                    document.getElementById('noApiKey').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error creating API key:', error);
-                document.getElementById('noApiKey').style.display = 'none';
             }
         }
 
@@ -327,10 +397,10 @@
         function displayImageHistory(generations) {
             const container = document.getElementById('imageHistoryContainer');
             console.log('Displaying image history:', generations);
-            
+
             if (generations.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8 text-gray-400">
+                    <div class="col-span-full text-center py-8 text-gray-400">
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                         </svg>
@@ -344,50 +414,52 @@
             container.innerHTML = generations.map(gen => {
                 // Create image URL - try different possible fields
                 const imageUrl = gen.public_url || gen.image_url || gen.storage_path;
-                
+
                 console.log('Image generation data:', gen);
                 console.log('Image URL:', imageUrl);
-                
+
                 return `
-                    <div class="border border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-700">
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0">
-                                ${imageUrl ? 
-                                    `<img src="${imageUrl}" alt="${gen.prompt}" class="w-20 h-20 object-cover rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                     <div class="w-20 h-20 bg-gray-600 rounded-lg flex items-center justify-center" style="display:none;">
-                                         <span class="text-gray-400 text-xs">No Image</span>
-                                     </div>` :
-                                    `<div class="w-20 h-20 bg-gray-600 rounded-lg flex items-center justify-center">
-                                         <span class="text-gray-400 text-xs">No Image</span>
-                                     </div>`
-                                }
+                    <div class="border border-gray-600 rounded-lg p-4 hover:shadow-lg transition-all bg-gray-700 hover:bg-gray-600 group">
+                        <!-- Image Preview -->
+                        <div class="mb-3">
+                            ${imageUrl ?
+                                `<img src="${imageUrl}" alt="${gen.prompt}" class="w-full h-32 object-cover rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-32 bg-gray-600 rounded-lg flex items-center justify-center" style="display:none;">
+                                     <span class="text-gray-400 text-sm">No Image</span>
+                                 </div>` :
+                                `<div class="w-full h-32 bg-gray-600 rounded-lg flex items-center justify-center">
+                                     <span class="text-gray-400 text-sm">No Image</span>
+                                 </div>`
+                            }
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-medium text-white truncate" title="${gen.prompt}">${gen.prompt}</h4>
+                                <span class="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded">${gen.dimensions}</span>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-sm font-medium text-white truncate">${gen.prompt}</h4>
-                                    <span class="text-xs text-gray-400">${gen.dimensions}</span>
-                                </div>
-                                <div class="flex items-center justify-between text-xs text-gray-400">
-                                    <span>${new Date(gen.created_at).toLocaleString()}</span>
-                                    <span class="flex items-center">
-                                        ${gen.success ? 
-                                            '<span class="text-green-400">✓ Success</span>' : 
-                                            '<span class="text-red-400">✗ Failed</span>'
-                                        }
-                                    </span>
-                                </div>
-                                ${gen.error_message ? `<div class="mt-2 text-xs text-red-400">${gen.error_message}</div>` : ''}
-                                ${imageUrl ? `
-                                    <div class="mt-2 flex items-center space-x-2">
-                                        <button onclick="copyImageUrl('${imageUrl}')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-300 bg-gray-600 border border-gray-500 rounded-md hover:bg-gray-500 hover:text-white transition-colors">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                            </svg>
-                                            Copy Link
-                                        </button>
-                                    </div>
-                                ` : ''}
+                            
+                            <div class="flex items-center justify-between text-xs text-gray-400">
+                                <span class="truncate">${new Date(gen.created_at).toLocaleDateString()}</span>
+                                <span class="flex items-center">
+                                    ${gen.success ?
+                                        '<span class="text-green-400">✓</span>' :
+                                        '<span class="text-red-400">✗</span>'
+                                    }
+                                </span>
                             </div>
+                            
+                            ${gen.error_message ? `<div class="text-xs text-red-400 truncate" title="${gen.error_message}">${gen.error_message}</div>` : ''}
+                            
+                            ${imageUrl ? `
+                                <button onclick="copyImageUrl('${imageUrl}')" class="w-full mt-3 inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-300 bg-gray-600 border border-gray-500 rounded-md hover:bg-gray-500 hover:text-white transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Link
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -408,8 +480,8 @@
                 `;
                 button.classList.remove('bg-gray-600', 'hover:bg-gray-500');
                 button.classList.add('bg-green-600', 'hover:bg-green-500');
-                
-            setTimeout(() => {
+
+                setTimeout(() => {
                     button.innerHTML = originalText;
                     button.classList.remove('bg-green-600', 'hover:bg-green-500');
                     button.classList.add('bg-gray-600', 'hover:bg-gray-500');
@@ -420,51 +492,64 @@
             });
         }
 
-        // Copy API key
-        function copyApiKey() {
-            if (!userApiKey) return;
-            
-            navigator.clipboard.writeText(userApiKey).then(() => {
-                // Show success feedback
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                button.className = button.className.replace('bg-green-600', 'bg-green-500');
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.className = button.className.replace('bg-green-500', 'bg-green-600');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy API key:', err);
-            });
-        }
-
-        // Copy URL
-        function copyUrl() {
-            const urlElement = document.getElementById('urlDisplay');
-            const url = urlElement.textContent;
-            
-            navigator.clipboard.writeText(url).then(() => {
-                // Show success feedback
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                button.className = button.className.replace('bg-green-600', 'bg-green-500');
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.className = button.className.replace('bg-green-500', 'bg-green-600');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy URL:', err);
-            });
-        }
 
         // Set size for demo generator
         function setSize(width, height) {
             document.getElementById('demoWidth').value = width;
             document.getElementById('demoHeight').value = height;
+            updateLivePreview();
+        }
+
+        // Update live URL preview
+        function updateLivePreview() {
+            const prompt = document.getElementById('demoPrompt').value || 'your+prompt';
+            const width = document.getElementById('demoWidth').value || '600';
+            const height = document.getElementById('demoHeight').value || '400';
+            const baseUrl = window.location.origin;
+            
+            let url;
+            if (userApiKey) {
+                url = `${baseUrl}/${width}x${height}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(prompt)}`;
+            } else {
+                url = `${baseUrl}/${width}x${height}.jpg?api_key=YOUR_API_KEY&text=${encodeURIComponent(prompt)}`;
+            }
+            
+            document.getElementById('liveUrlPreview').textContent = url;
+            
+            // Update dimensions display
+            document.getElementById('currentDimensions').textContent = `${width}×${height}`;
+        }
+
+        // Copy live URL to clipboard
+        function copyLiveUrl() {
+            const url = document.getElementById('liveUrlPreview').textContent;
+            
+            if (url === 'Loading...' || url.includes('YOUR_API_KEY')) {
+                alert('Please wait for your API key to load or enter a prompt first.');
+                return;
+            }
+            
+            navigator.clipboard.writeText(url).then(() => {
+                // Show success feedback
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                button.classList.remove('bg-green-700', 'hover:bg-green-600');
+                button.classList.add('bg-green-500');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('bg-green-500');
+                    button.classList.add('bg-green-700', 'hover:bg-green-600');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy URL:', err);
+                alert('Failed to copy URL to clipboard');
+            });
         }
 
         // Generate link function
@@ -473,14 +558,14 @@
                 alert('Please wait for your API key to be loaded.');
                 return;
             }
-            
+
             const prompt = document.getElementById('demoPrompt').value || 'abstract art';
             const width = document.getElementById('demoWidth').value;
             const height = document.getElementById('demoHeight').value;
 
             const baseUrl = window.location.origin;
             const url = `${baseUrl}/${width}x${height}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(prompt)}`;
-            
+
             // Copy to clipboard
             navigator.clipboard.writeText(url).then(() => {
                 alert('Link copied to clipboard!');
@@ -490,6 +575,7 @@
                 prompt('Copy this URL:', url);
             });
         }
+
 
         // Logout function
         function logout() {
@@ -502,43 +588,33 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, starting user data load...');
             console.log('Testing JavaScript execution...');
-            
+
             // Test if elements exist
-            const apiKeySection = document.getElementById('apiKeySection');
             const imageHistoryContainer = document.getElementById('imageHistoryContainer');
-            console.log('API Key Section element:', apiKeySection);
             console.log('Image History Container element:', imageHistoryContainer);
-            
-            
-            // Show loading state for API key if user has token
-            const token = localStorage.getItem('userToken');
-            if (token) {
-                console.log('Token found, showing loading state');
-                document.getElementById('noApiKey').style.display = 'block';
-            } else {
-                // Hide loading state if no token
-                document.getElementById('noApiKey').style.display = 'none';
-            }
-            
+
             loadUserData();
-            
+
+            // Initialize live preview
+            updateLivePreview();
+
             // Auto-refresh user data every 5 seconds
             setInterval(() => {
                 console.log('Auto-refreshing user data...');
                 loadUserData();
             }, 5000);
-            
+
             // Demo form handler
             const demoForm = document.getElementById('demoForm');
             if (demoForm) {
-        demoForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+                demoForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-            if (!userApiKey) {
+                    if (!userApiKey) {
                         alert('Please wait for your API key to be loaded.');
-                return;
-            }
-                    
+                        return;
+                    }
+
                     const prompt = document.getElementById('demoPrompt').value || 'abstract art';
                     const width = document.getElementById('demoWidth').value;
                     const height = document.getElementById('demoHeight').value;
@@ -547,39 +623,43 @@
                     const loading = submitBtn.querySelector('.loading');
                     const imageContainer = document.getElementById('demoImageContainer');
 
-            // Show loading state
+                    // Show loading state
                     submitBtn.disabled = true;
                     btnText.style.display = 'none';
                     loading.classList.remove('hidden');
 
-            try {
-                const url = `/${width}x${height}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(prompt)}`;
-                
-                // Create image element
-                const img = new Image();
+                    try {
+                        const url = `/${width}x${height}.jpg?api_key=${userApiKey}&text=${encodeURIComponent(prompt)}`;
+
+                        // Create image element
+                        const img = new Image();
                         img.className = 'max-w-full max-h-96 rounded-lg shadow-lg';
-                
-                img.onload = function() {
+
+                        img.onload = function() {
                             imageContainer.innerHTML = '';
                             imageContainer.appendChild(img);
-                    
-                    // Hide loading
+
+                            // Hide loading
                             submitBtn.disabled = false;
                             btnText.style.display = 'block';
                             loading.classList.add('hidden');
-                            
+
+                            // Update status
+                            document.getElementById('imageStatus').textContent = 'Generated';
+                            document.getElementById('imageStatus').className = 'text-green-400';
+
                             // Reload image history to show new generation
                             loadImageGenerations();
-                };
+                        };
 
-                img.onerror = function() {
-                    throw new Error('Failed to load image');
-                };
+                        img.onerror = function() {
+                            throw new Error('Failed to load image');
+                        };
 
-                img.src = url;
+                        img.src = url;
 
-            } catch (error) {
-                console.error('Error:', error);
+                    } catch (error) {
+                        console.error('Error:', error);
                         imageContainer.innerHTML = `
                             <div class="text-red-500 text-center">
                                 <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,8 +669,8 @@
                                 <p class="text-sm">Please check your API key and try again</p>
                             </div>
                         `;
-                
-                // Hide loading
+
+                        // Hide loading
                         submitBtn.disabled = false;
                         btnText.style.display = 'block';
                         loading.classList.add('hidden');
