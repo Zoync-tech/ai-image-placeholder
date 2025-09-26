@@ -21,13 +21,20 @@ const imageCache = new NodeCache({ stdTTL: 86400 });
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
 // Check if Supabase is configured
-const isSupabaseConfigured = supabaseUrl && supabaseServiceKey;
+const isSupabaseConfigured = supabaseUrl && supabaseServiceKey && supabaseAnonKey;
+
+console.log('🔧 Supabase Configuration Check:');
+console.log(`   SUPABASE_URL: ${supabaseUrl ? '✅ Set' : '❌ Missing'}`);
+console.log(`   SUPABASE_SERVICE_ROLE_KEY: ${supabaseServiceKey ? '✅ Set' : '❌ Missing'}`);
+console.log(`   SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅ Set' : '❌ Missing'}`);
+console.log(`   Supabase Configured: ${isSupabaseConfigured ? '✅ Yes' : '❌ No'}`);
 
 if (!isSupabaseConfigured) {
   console.warn('⚠️  Supabase environment variables not set. Using in-memory storage (data will be lost on restart).');
-  console.warn('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to enable persistent storage.');
+  console.warn('Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ANON_KEY to enable persistent storage.');
 }
 
 // Create Supabase client (with fallback for missing config)
