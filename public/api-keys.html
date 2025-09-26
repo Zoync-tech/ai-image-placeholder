@@ -43,7 +43,7 @@
 <body class="bg-gray-900 min-h-screen">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-800 border-r border-gray-700 fixed h-screen overflow-y-auto z-50" id="sidebar">
+        <div class="w-64 bg-gray-800 border-r border-gray-700 fixed h-screen overflow-y-auto z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
             <!-- Logo Section -->
             <div class="p-6 border-b border-gray-700">
                 <div class="flex items-center">
@@ -117,72 +117,74 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 ml-64">
+        <div class="flex-1 lg:ml-64">
             <!-- Header -->
-            <div class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+            <div class="bg-gray-800 border-b border-gray-700 px-4 sm:px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <button class="lg:hidden bg-stripe-purple text-white px-3 py-2 rounded-lg mr-4" onclick="toggleSidebar()">
-                            ☰ Menu
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
                         </button>
-                        <h1 class="text-2xl font-bold text-white">API Keys</h1>
+                        <h1 class="text-xl sm:text-2xl font-bold text-white">API Keys</h1>
                     </div>
                 </div>
             </div>
 
             <!-- Content -->
-            <div class="p-6 bg-gray-900">
+            <div class="p-4 sm:p-6 bg-gray-900">
                 <!-- API Keys Management Section -->
-                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-semibold text-white">Your API Key</h2>
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8">
+                    <div class="flex items-center justify-between mb-4 sm:mb-6">
+                        <h2 class="text-lg sm:text-xl font-semibold text-white">Your API Key</h2>
                     </div>
 
                     <div id="apiKeysContainer">
-                        <div class="text-center py-8 text-gray-400">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-stripe-purple mx-auto mb-4"></div>
-                            Loading API keys...
+                        <div class="text-center py-6 sm:py-8 text-gray-400">
+                            <div class="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-stripe-purple mx-auto mb-4"></div>
+                            <span class="text-sm sm:text-base">Loading API keys...</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Usage Instructions -->
-                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
-                    <h2 class="text-xl font-semibold text-white mb-4">How to Use Your API Keys</h2>
-                    <div class="space-y-4">
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-white mb-2">1. Basic Usage</h3>
-                            <p class="text-gray-300 mb-2">Make requests to generate images using this URL pattern:</p>
-                            <code class="block bg-gray-900 border border-gray-600 rounded p-3 text-sm font-mono text-gray-200">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl font-semibold text-white mb-4">How to Use Your API Keys</h2>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="bg-gray-700 rounded-lg p-3 sm:p-4">
+                            <h3 class="text-base sm:text-lg font-medium text-white mb-2">1. Basic Usage</h3>
+                            <p class="text-gray-300 mb-2 text-sm sm:text-base">Make requests to generate images using this URL pattern:</p>
+                            <code class="block bg-gray-900 border border-gray-600 rounded p-2 sm:p-3 text-xs sm:text-sm font-mono text-gray-200">
                                 https://your-domain.com/{width}x{height}.jpg?api_key=YOUR_API_KEY&text=your+prompt
                             </code>
                         </div>
 
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-white mb-2">2. Example Request</h3>
-                            <code class="block bg-gray-900 border border-gray-600 rounded p-3 text-sm font-mono text-gray-200">
+                        <div class="bg-gray-700 rounded-lg p-3 sm:p-4">
+                            <h3 class="text-base sm:text-lg font-medium text-white mb-2">2. Example Request</h3>
+                            <code class="block bg-gray-900 border border-gray-600 rounded p-2 sm:p-3 text-xs sm:text-sm font-mono text-gray-200">
                                 https://your-domain.com/800x600.jpg?api_key=abc123&text=beautiful+sunset+over+mountains
                             </code>
                         </div>
 
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-white mb-2">3. Supported Dimensions</h3>
-                            <p class="text-gray-300 mb-2">You can use any dimensions up to 4096x4096. Common sizes include:</p>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-mono text-gray-200">
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">600x400</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">800x600</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">1024x768</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">1920x1080</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">512x512</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">1024x1024</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">2048x2048</span>
-                                <span class="bg-gray-900 border border-gray-600 rounded p-2">4096x4096</span>
+                        <div class="bg-gray-700 rounded-lg p-3 sm:p-4">
+                            <h3 class="text-base sm:text-lg font-medium text-white mb-2">3. Supported Dimensions</h3>
+                            <p class="text-gray-300 mb-2 text-sm sm:text-base">You can use any dimensions up to 4096x4096. Common sizes include:</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs sm:text-sm font-mono text-gray-200">
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">600x400</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">800x600</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">1024x768</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">1920x1080</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">512x512</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">1024x1024</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">2048x2048</span>
+                                <span class="bg-gray-900 border border-gray-600 rounded p-1.5 sm:p-2">4096x4096</span>
                             </div>
                         </div>
 
-                        <div class="bg-yellow-900 border border-yellow-700 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-yellow-300 mb-2">⚠️ Important Notes</h3>
-                            <ul class="text-yellow-200 space-y-1 text-sm list-disc list-inside">
+                        <div class="bg-yellow-900 border border-yellow-700 rounded-lg p-3 sm:p-4">
+                            <h3 class="text-base sm:text-lg font-medium text-yellow-300 mb-2">⚠️ Important Notes</h3>
+                            <ul class="text-yellow-200 space-y-1 text-xs sm:text-sm list-disc list-inside">
                                 <li>Keep your API keys secure and never share them publicly</li>
                                 <li>URL encode your text prompts (spaces become +, special characters need encoding)</li>
                                 <li>Each image generation consumes credits from your account</li>
@@ -201,6 +203,16 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = event.target.closest('[onclick="toggleSidebar()"]');
+            
+            if (window.innerWidth < 1024 && !sidebar.contains(event.target) && !menuButton) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
 
         // Global variables
         let userApiKeys = [];

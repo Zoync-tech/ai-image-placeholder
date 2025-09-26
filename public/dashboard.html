@@ -43,7 +43,7 @@
 <body class="bg-gray-900 min-h-screen">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-800 border-r border-gray-700 fixed h-screen overflow-y-auto z-50" id="sidebar">
+        <div class="w-64 bg-gray-800 border-r border-gray-700 fixed h-screen overflow-y-auto z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
             <!-- Logo Section -->
             <div class="p-6 border-b border-gray-700">
                 <div class="flex items-center">
@@ -117,28 +117,30 @@
                     </div>
 
         <!-- Main Content -->
-        <div class="flex-1 ml-64">
+        <div class="flex-1 lg:ml-64">
             <!-- Header -->
-            <div class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+            <div class="bg-gray-800 border-b border-gray-700 px-4 sm:px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <button class="lg:hidden bg-stripe-purple text-white px-3 py-2 rounded-lg mr-4" onclick="toggleSidebar()">
-                            ☰ Menu
-                            </button>
-                        <h1 class="text-2xl font-bold text-white">Today</h1>
-                        </div>
-                        </div>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-xl sm:text-2xl font-bold text-white">Today</h1>
                     </div>
+                </div>
+            </div>
 
 
             <!-- Content -->
-            <div class="p-6 bg-gray-900">
+            <div class="p-4 sm:p-6 bg-gray-900">
 
                 <!-- User Info Section -->
-                <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8" id="userInfoMain" style="display: none;">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-white">Welcome, <span id="userEmailMain"></span>!</h3>
-                        <div class="flex items-center space-x-4 text-sm text-gray-300">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8" id="userInfoMain" style="display: none;">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-0">Welcome, <span id="userEmailMain"></span>!</h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-300">
                             <span>Credits: <span class="font-semibold text-green-600" id="userCreditsMain">0</span></span>
                             <span>Generations: <span class="font-semibold" id="totalGenerations">0</span></span>
                         </div>
@@ -147,12 +149,12 @@
                 </div>
 
                 <!-- API Key Section -->
-                <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8">
-                    <div class="flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-stripe-purple mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+                    <div class="flex items-center justify-center mb-4 sm:mb-6">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-stripe-purple mr-2 sm:mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
                             <path d="M280-400q-33 0-56.5-23.5T200-480q0-33 23.5-56.5T280-560q33 0 56.5 23.5T360-480q0 33-23.5 56.5T280-400Zm0 160q-100 0-170-70T40-480q0-100 70-170t170-70q67 0 121.5 33t86.5 87h352l120 120-180 180-80-60-80 60-85-60h-47q-32 54-86.5 87T280-240Zm0-80q56 0 98.5-34t56.5-86h125l58 41 82-61 71 55 75-75-40-40H435q-14-52-56.5-86T280-640q-66 0-113 47t-47 113q0 66 47 113t113 47Z"/>
                         </svg>
-                        <h2 class="text-xl font-semibold text-white">Your API Key</h2>
+                        <h2 class="text-lg sm:text-xl font-semibold text-white">Your API Key</h2>
                     </div>
                     
                     <div class="bg-blue-900 border border-blue-700 rounded-lg p-4 mb-4" id="noApiKey" style="display: none;">
@@ -164,30 +166,30 @@
                         </div>
                     </div>
 
-                    <div class="bg-gray-700 border-2 border-stripe-purple rounded-lg p-6 text-center" id="apiKeySection" style="display: none;">
+                    <div class="bg-gray-700 border-2 border-stripe-purple rounded-lg p-4 sm:p-6 text-center" id="apiKeySection" style="display: none;">
                         <div class="flex items-center justify-center mb-4">
-                            <svg class="w-5 h-5 text-stripe-purple mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-stripe-purple mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
                                 <path d="M280-400q-33 0-56.5-23.5T200-480q0-33 23.5-56.5T280-560q33 0 56.5 23.5T360-480q0 33-23.5 56.5T280-400Zm0 160q-100 0-170-70T40-480q0-100 70-170t170-70q67 0 121.5 33t86.5 87h352l120 120-180 180-80-60-80 60-85-60h-47q-32 54-86.5 87T280-240Zm0-80q56 0 98.5-34t56.5-86h125l58 41 82-61 71 55 75-75-40-40H435q-14-52-56.5-86T280-640q-66 0-113 47t-47 113q0 66 47 113t113 47Z"/>
                             </svg>
-                            <h3 class="text-lg font-semibold text-white">Your API Key:</h3>
+                            <h3 class="text-base sm:text-lg font-semibold text-white">Your API Key:</h3>
                         </div>
-                        <div class="bg-gray-600 border border-gray-500 rounded-lg p-4 mb-4 font-mono text-sm text-gray-200 break-all" id="apiKeyDisplay"></div>
-                        <button onclick="copyApiKey()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center mx-auto">
+                        <div class="bg-gray-600 border border-gray-500 rounded-lg p-3 sm:p-4 mb-4 font-mono text-xs sm:text-sm text-gray-200 break-all" id="apiKeyDisplay"></div>
+                        <button onclick="copyApiKey()" class="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors flex items-center mx-auto text-sm sm:text-base">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
                             Copy API Key
                         </button>
                         
-                        <div class="mt-6">
+                        <div class="mt-4 sm:mt-6">
                             <div class="flex items-center justify-center mb-4">
-                                <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                                 </svg>
-                                <h3 class="text-lg font-semibold text-white">Your Image URL:</h3>
+                                <h3 class="text-base sm:text-lg font-semibold text-white">Your Image URL:</h3>
                             </div>
-                            <div class="bg-green-900 border border-green-700 rounded-lg p-4 mb-4 font-mono text-sm text-green-200 break-all" id="urlDisplay"></div>
-                            <button onclick="copyUrl()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center mx-auto">
+                            <div class="bg-green-900 border border-green-700 rounded-lg p-3 sm:p-4 mb-4 font-mono text-xs sm:text-sm text-green-200 break-all" id="urlDisplay"></div>
+                            <button onclick="copyUrl()" class="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors flex items-center mx-auto text-sm sm:text-base">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                 </svg>
@@ -198,62 +200,62 @@
                 </div>
 
                 <!-- Demo Generator Section -->
-                <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8">
-                    <h2 class="text-xl font-semibold text-white mb-6 text-center">Demo Generator</h2>
+                <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+                    <h2 class="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 text-center">Demo Generator</h2>
                     
                     <form id="demoForm" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Prompt</label>
-                            <input type="text" id="demoPrompt" placeholder="Enter your prompt..." class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-stripe-purple">
+                            <input type="text" id="demoPrompt" placeholder="Enter your prompt..." class="w-full px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-stripe-purple text-sm sm:text-base">
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Width</label>
-                                <input type="number" id="demoWidth" value="600" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-stripe-purple">
+                                <input type="number" id="demoWidth" value="600" class="w-full px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-stripe-purple text-sm sm:text-base">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Height</label>
-                                <input type="number" id="demoHeight" value="400" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-stripe-purple">
+                                <input type="number" id="demoHeight" value="400" class="w-full px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-stripe-purple text-sm sm:text-base">
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Quick Size Presets</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" onclick="setSize(600, 400)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">600×400</button>
-                                <button type="button" onclick="setSize(800, 600)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">800×600</button>
-                                <button type="button" onclick="setSize(1024, 768)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×768</button>
-                                <button type="button" onclick="setSize(1920, 1080)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1920×1080</button>
-                                <button type="button" onclick="setSize(512, 512)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">512×512</button>
-                                <button type="button" onclick="setSize(1024, 1024)" class="px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×1024</button>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                <button type="button" onclick="setSize(600, 400)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">600×400</button>
+                                <button type="button" onclick="setSize(800, 600)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">800×600</button>
+                                <button type="button" onclick="setSize(1024, 768)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×768</button>
+                                <button type="button" onclick="setSize(1920, 1080)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1920×1080</button>
+                                <button type="button" onclick="setSize(512, 512)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">512×512</button>
+                                <button type="button" onclick="setSize(1024, 1024)" class="px-2 sm:px-3 py-2 bg-gray-700 text-white hover:bg-stripe-purple hover:text-white rounded-lg text-xs font-medium transition-colors">1024×1024</button>
                             </div>
                         </div>
                         
-                        <div class="flex space-x-4">
-                            <button type="submit" class="flex-1 bg-stripe-purple hover:bg-stripe-purple-dark text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                            <button type="submit" class="flex-1 bg-stripe-purple hover:bg-stripe-purple-dark text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base">
                                 Generate Image
                             </button>
-                            <button type="button" onclick="generateLink()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            <button type="button" onclick="generateLink()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base">
                                 Generate Link
                             </button>
                         </div>
                     </form>
                     
-                    <div id="demoImageContainer" class="mt-6 p-8 bg-gray-700 rounded-lg min-h-[400px] flex items-center justify-center" style="display: none;">
+                    <div id="demoImageContainer" class="mt-4 sm:mt-6 p-4 sm:p-8 bg-gray-700 rounded-lg min-h-[300px] sm:min-h-[400px] flex items-center justify-center" style="display: none;">
                         <div class="text-center text-gray-400">
-                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
-                            <p>Generated image will appear here</p>
+                            <p class="text-sm sm:text-base">Generated image will appear here</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Image History Section -->
-                <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                    <h2 class="text-xl font-semibold text-white mb-6 text-center">Image History</h2>
-                    <div id="imageHistoryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 text-center">Image History</h2>
+                    <div id="imageHistoryContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                         <!-- Image history will be loaded here -->
                     </div>
                 </div>
@@ -269,6 +271,16 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = event.target.closest('[onclick="toggleSidebar()"]');
+            
+            if (window.innerWidth < 1024 && !sidebar.contains(event.target) && !menuButton) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
 
         // Global variables
         let userApiKey = null;
