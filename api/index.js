@@ -50,7 +50,7 @@ try {
   console.warn('Creating simplified SupabaseService...');
   
   // Create a simplified SupabaseService directly
-  const { v4: uuidv4 } = require('uuid/v4');
+  const { v4: uuidv4 } = require('uuid');
   
   class SimplifiedSupabaseService {
     // Get user profile
