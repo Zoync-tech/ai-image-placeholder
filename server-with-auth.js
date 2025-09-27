@@ -26,19 +26,41 @@ console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
 console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing');
 console.log('- SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
 
+// Try direct Supabase initialization first
 try {
-  const { supabase: supabaseClient, SupabaseService: SupabaseServiceClass } = require('./supabase-config');
-  supabase = supabaseClient;
-  SupabaseService = SupabaseServiceClass;
+  const { createClient } = require('@supabase/supabase-js');
   
-  if (supabase && SupabaseService) {
-    console.log('✅ Supabase initialized successfully');
-  } else {
-    console.warn('⚠️  Supabase client is null - environment variables may be missing');
-  }
-} catch (error) {
-  console.warn('⚠️  Supabase initialization failed:', error.message);
-  console.warn('Authentication features will be disabled');
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('✅ Direct Supabase client created');
+    
+    // Test the connection
+    supabase.from('profiles').select('count').limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('⚠️  Supabase connection test failed:', error.message);
+        } else {
+          console.log('✅ Supabase connection test successful');
+        }
+      })
+      .catch((testError) => {
+        console.warn('⚠️  Supabase connection test error:', testError.message);
+      });
+    } else {
+    console.warn('⚠️  Missing Supabase environment variables for direct initialization');
+    }
+  } catch (error) {
+  console.warn('⚠️  Direct Supabase initialization failed:', error.message);
+}
+
+// Try to load SupabaseService from module
+try {
+  const { SupabaseService: SupabaseServiceClass } = require('./supabase-config');
+  SupabaseService = SupabaseServiceClass;
+  console.log('✅ SupabaseService loaded from module');
+  } catch (error) {
+  console.warn('⚠️  SupabaseService module load failed:', error.message);
+  console.warn('Authentication features will be limited');
 }
 
 // Health check
