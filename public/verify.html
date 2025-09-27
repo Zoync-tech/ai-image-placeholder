@@ -226,10 +226,10 @@
                     localStorage.setItem('userEmail', userEmail);
                     localStorage.removeItem('pendingVerificationEmail');
 
-                    showSuccess('Email verified successfully! Redirecting to dashboard...');
+                    showSuccess('Email verified successfully! Redirecting to AI Image Generator...');
 
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = 'https://www.vrccim.com/ai-image-generator.html';
                     }, 2000);
                 } else {
                     const error = await response.json();
