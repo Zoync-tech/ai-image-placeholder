@@ -487,6 +487,12 @@ app.post('/api/create-key', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    // Ensure user profile exists in the users table
+    const profile = await SupabaseService.getOrCreateUserProfile(user);
+    if (!profile) {
+      return res.status(500).json({ error: 'Failed to create user profile' });
+    }
+
     const { v4: uuidv4 } = require('uuid');
     const apiKey = uuidv4() + '-' + Math.random().toString(36).substr(2, 8);
 
