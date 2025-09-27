@@ -32,8 +32,8 @@ console.log('\n📋 Quick Start:');
 console.log('===============');
 console.log('1. ✅ Your FAL AI API key is already configured!');
 console.log('2. Run: npm start');
-console.log('3. Visit: http://localhost:3000');
-console.log('4. Test with: http://localhost:3000/600x400?text=Hello+World');
+console.log('3. Visit: https://vrccim.com');
+console.log('4. Test with: https://vrccim.com/600x400?text=Hello+World');
 
 console.log('\n💡 Tips:');
 console.log('=========');

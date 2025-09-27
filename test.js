@@ -2,7 +2,7 @@ const axios = require('axios');
 
 // Test the server endpoints
 async function testServer() {
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = 'https://vrccim.com';
     
     console.log('🧪 Testing AI Image Placeholder Server...\n');
     

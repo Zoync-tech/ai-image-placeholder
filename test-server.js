@@ -32,5 +32,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Test server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`📊 Health check: https://vrccim.com/health`);
 });

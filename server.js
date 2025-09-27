@@ -1228,8 +1228,8 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🎨 Image generator: http://localhost:${PORT}/600x400.jpg?text=hello`);
+  console.log(`📊 Health check: https://vrccim.com/health`);
+  console.log(`🎨 Image generator: https://vrccim.com/600x400.jpg?text=hello`);
   
   if (StripeService.isConfigured) {
     console.log(`💳 Stripe integration: Enabled`);
