@@ -25,18 +25,22 @@ class SupabaseService {
   static async createUserProfile(user) {
     try {
       // Create profile
-      const { error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: user.id,
           email: user.email,
           full_name: user.user_metadata?.full_name || null
-        });
+        })
+        .select()
+        .single();
       
       if (profileError) {
         console.error('Error creating profile:', profileError);
-        throw new Error('Failed to create user profile');
+        throw new Error(`Failed to create user profile: ${profileError.message}`);
       }
+      
+      console.log('Profile created successfully:', profileData);
       
       // Create default API key
       const apiKey = await this.generateApiKey(user.id, 'Default API Key');
@@ -68,6 +72,18 @@ class SupabaseService {
   
   // Generate a new API key for user
   static async generateApiKey(userId, name = 'Default API Key') {
+    // First check if profile exists
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error('Profile not found for user:', userId, profileError);
+      throw new Error('User profile not found. Please ensure profile is created first.');
+    }
+    
     const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
     
     const { data, error } = await supabase
