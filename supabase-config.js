@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require('uuid/v4');
 
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL;
