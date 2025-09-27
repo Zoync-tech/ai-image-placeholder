@@ -56,6 +56,31 @@ app.get('/subscription-success', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscription-success.html'));
 });
 
+// Basic API routes (minimal versions)
+app.post('/api/auth/login', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
+app.post('/api/auth/signup', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
+app.post('/api/auth/verify-email', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
+app.post('/api/auth/resend-verification', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
+app.post('/api/auth/forgot-password', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
+app.post('/api/auth/reset-password', (req, res) => {
+  res.status(501).json({ error: 'Authentication not implemented in minimal server' });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Error:', err);
