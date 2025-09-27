@@ -162,6 +162,104 @@ try {
       
       return data;
     }
+    
+    // Get user's API keys
+    static async getUserApiKeys(userId) {
+      if (!supabase) return [];
+      
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error getting user API keys:', error);
+        return [];
+      }
+      
+      return data || [];
+    }
+    
+    // Get user's image generation history
+    static async getUserImageHistory(userId, limit = 50) {
+      if (!supabase) return [];
+      
+      const { data, error } = await supabase
+        .from('image_generations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) {
+        console.error('Error getting user image history:', error);
+        return [];
+      }
+      
+      return data || [];
+    }
+    
+    // Validate API key and get user info
+    static async validateApiKey(apiKey) {
+      if (!supabase) return null;
+      
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select(`
+          id,
+          user_id,
+          name,
+          is_active,
+          total_requests,
+          profiles!inner (
+            id,
+            email,
+            credits
+          )
+        `)
+        .eq('api_key', apiKey)
+        .eq('is_active', true)
+        .single();
+      
+      if (error || !data) {
+        return null;
+      }
+      
+      return data;
+    }
+    
+    // Log image generation
+    static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
+      if (!supabase) return;
+      
+      const { error } = await supabase
+        .from('image_generations')
+        .insert({
+          user_id: userId,
+          api_key_id: apiKeyId,
+          prompt: prompt,
+          dimensions: dimensions,
+          credits_used: 1,
+          success: success,
+          error_message: errorMessage
+        });
+      
+      if (error) {
+        console.error('Error logging image generation:', error);
+      }
+      
+      // Update API key usage stats
+      if (success && apiKeyId) {
+        await supabase
+          .from('api_keys')
+          .update({ 
+            total_requests: supabase.raw('total_requests + 1'),
+            last_used_at: new Date().toISOString()
+          })
+          .eq('id', apiKeyId);
+      }
+    }
   }
   
   SupabaseService = SimplifiedSupabaseService;
@@ -236,6 +334,10 @@ app.get('/subscription-success', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscription-success.html'));
 });
 
+app.get('/ai-image-generator', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ai-image-generator.html'));
+});
+
 // Authentication API routes (with error handling)
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -263,9 +365,8 @@ app.post('/api/auth/login', async (req, res) => {
     const profile = await SupabaseService.getOrCreateUserProfile(data.user);
     
     res.json({
-      success: true,
-      user: data.user,
-      profile: profile
+      token: data.session.access_token,
+      user: profile
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -435,6 +536,160 @@ app.post('/api/auth/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// User profile and management routes
+app.get('/api/user/profile', async (req, res) => {
+  try {
+    if (!supabase || !SupabaseService) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const profile = await SupabaseService.getOrCreateUserProfile(user);
+    res.json(profile);
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/user/api-keys', async (req, res) => {
+  try {
+    if (!supabase || !SupabaseService) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const apiKeys = await SupabaseService.getUserApiKeys(user.id);
+    res.json({ api_keys: apiKeys });
+  } catch (error) {
+    console.error('Error getting API keys:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/user/image-generations', async (req, res) => {
+  try {
+    if (!supabase || !SupabaseService) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const generations = await SupabaseService.getUserImageHistory(user.id);
+    res.json({ generations });
+  } catch (error) {
+    console.error('Error getting image generations:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/create-key', async (req, res) => {
+  try {
+    if (!supabase || !SupabaseService) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { name } = req.body;
+    const apiKey = await SupabaseService.generateApiKey(user.id, name || 'Default API Key');
+    
+    res.json({ 
+      api_key: apiKey.api_key,
+      credits: 100 // Default credits for new users
+    });
+  } catch (error) {
+    console.error('Error creating API key:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Image generation endpoint (placeholder - returns a simple placeholder image)
+app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, res) => {
+  try {
+    const { width, height, format } = req.params;
+    const { text, api_key } = req.query;
+
+    // Validate dimensions
+    const w = parseInt(width);
+    const h = parseInt(height);
+    
+    if (w < 1 || w > 2048 || h < 1 || h > 2048) {
+      return res.status(400).json({ error: 'Invalid dimensions. Must be between 1x1 and 2048x2048' });
+    }
+
+    // Check API key if provided
+    let userId = null;
+    if (api_key) {
+      const apiKeyData = await SupabaseService.validateApiKey(api_key);
+      if (!apiKeyData) {
+        return res.status(401).json({ error: 'Invalid API key' });
+      }
+      userId = apiKeyData.user_id;
+    }
+
+    const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    
+    // For now, return a placeholder image URL
+    // In production, you would integrate with FAL AI or another image generation service
+    const placeholderUrl = `https://via.placeholder.com/${w}x${h}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
+    
+    // Log the generation if user is authenticated
+    if (userId) {
+      try {
+        await SupabaseService.logImageGeneration(
+          userId, 
+          api_key ? (await SupabaseService.validateApiKey(api_key))?.id : null,
+          prompt, 
+          `${w}x${h}`, 
+          true
+        );
+      } catch (logError) {
+        console.error('Error logging generation:', logError);
+      }
+    }
+
+    res.redirect(placeholderUrl);
+  } catch (error) {
+    console.error('Image generation error:', error);
+    res.status(500).json({ error: 'Image generation failed' });
   }
 });
 
