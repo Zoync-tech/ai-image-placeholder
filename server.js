@@ -260,7 +260,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     }
 
     // Code is valid, now verify with Supabase using admin API
-    const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers();
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
       console.error('Error listing users:', listError);
       return res.status(500).json({ error: 'Failed to verify email' });
@@ -272,7 +272,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     }
 
     // Update user to confirm email
-    const { data: updateData, error: updateError } = await supabaseClient.auth.admin.updateUserById(
+    const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
       user.id,
       { email_confirm: true }
     );
@@ -286,7 +286,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     global.verificationCodes.delete(email);
 
     // Create a session for the user
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email
     });
