@@ -20,11 +20,22 @@ app.use(express.static('public'));
 let supabase = null;
 let SupabaseService = null;
 
+// Debug environment variables
+console.log('Environment check:');
+console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing');
+console.log('- SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+
 try {
   const { supabase: supabaseClient, SupabaseService: SupabaseServiceClass } = require('./supabase-config');
   supabase = supabaseClient;
   SupabaseService = SupabaseServiceClass;
-  console.log('✅ Supabase initialized successfully');
+  
+  if (supabase && SupabaseService) {
+    console.log('✅ Supabase initialized successfully');
+  } else {
+    console.warn('⚠️  Supabase client is null - environment variables may be missing');
+  }
 } catch (error) {
   console.warn('⚠️  Supabase initialization failed:', error.message);
   console.warn('Authentication features will be disabled');
@@ -32,14 +43,34 @@ try {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({
+  res.json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: {
       node: process.version,
       port: PORT,
       hasSupabase: !!supabase,
-      hasStripe: !!process.env.STRIPE_SECRET_KEY
+      hasStripe: !!process.env.STRIPE_SECRET_KEY,
+      supabaseUrl: process.env.SUPABASE_URL ? 'Set' : 'Missing',
+      supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+    }
+  });
+});
+
+// Debug endpoint
+app.get('/debug', (req, res) => {
+  res.json({
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'Set' : 'Missing',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing',
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing'
+    },
+    supabase: {
+      initialized: !!supabase,
+      serviceAvailable: !!SupabaseService
     }
   });
 });
@@ -179,7 +210,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
       user: data.user,
       message: 'Email verified successfully'
     });
-  } catch (error) {
+      } catch (error) {
     console.error('Verification error:', error);
     res.status(500).json({ error: 'Email verification failed' });
   }
