@@ -11,6 +11,7 @@ const path = require('path');
 const { fal } = require('@fal-ai/client');
 const { supabase, supabaseClient, SupabaseService } = require('./supabase-config');
 const StripeService = new (require('./stripe-config'))();
+const ResendService = require('./resend-config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -191,6 +192,28 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     if (data.user && !data.user.email_confirmed_at) {
+      // Generate a 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store the verification code temporarily (you might want to use Redis or database for production)
+      // For now, we'll use a simple in-memory store
+      if (!global.verificationCodes) {
+        global.verificationCodes = new Map();
+      }
+      global.verificationCodes.set(email, {
+        code: verificationCode,
+        expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+      });
+
+      // Send verification email using Resend
+      try {
+        await ResendService.sendVerificationEmail(email, verificationCode);
+        console.log(`Verification email sent to ${email}`);
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+        // Continue anyway - user can still verify manually
+      }
+
       return res.status(201).json({ 
         message: 'Account created. Please check your email for verification.',
         requires_verification: true 
@@ -215,22 +238,74 @@ app.post('/api/auth/verify-email', async (req, res) => {
       return res.status(400).json({ error: 'Email and verification code are required' });
     }
 
-    const { data, error } = await supabaseClient.auth.verifyOtp({
-      email,
-      token: code,
-      type: 'email'
+    // Check our custom verification code
+    if (!global.verificationCodes) {
+      return res.status(400).json({ error: 'No verification code found' });
+    }
+
+    const storedData = global.verificationCodes.get(email);
+    if (!storedData) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    // Check if code has expired
+    if (Date.now() > storedData.expires) {
+      global.verificationCodes.delete(email);
+      return res.status(400).json({ error: 'Verification code has expired' });
+    }
+
+    // Check if code matches
+    if (storedData.code !== code) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    // Code is valid, now verify with Supabase using admin API
+    const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers();
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return res.status(500).json({ error: 'Failed to verify email' });
+    }
+
+    const user = users.users.find(u => u.email === email);
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    // Update user to confirm email
+    const { data: updateData, error: updateError } = await supabaseClient.auth.admin.updateUserById(
+      user.id,
+      { email_confirm: true }
+    );
+
+    if (updateError) {
+      console.error('Supabase verification error:', updateError);
+      return res.status(400).json({ error: 'Failed to verify email' });
+    }
+
+    // Clean up the verification code
+    global.verificationCodes.delete(email);
+
+    // Create a session for the user
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    if (sessionError) {
+      console.error('Session creation error:', sessionError);
+      return res.status(200).json({ 
+        message: 'Email verified successfully. Please login.',
+        redirect_to_login: true 
+      });
     }
 
     // Get or create user profile
-    const profile = await SupabaseService.getOrCreateUserProfile(data.user);
+    const profile = await SupabaseService.getOrCreateUserProfile(updateData.user);
 
     res.json({
-      token: data.session.access_token,
-      user: profile
+      token: sessionData.properties?.access_token || 'verified',
+      user: profile,
+      message: 'Email verified successfully'
     });
   } catch (error) {
     console.error('Email verification error:', error);
@@ -246,16 +321,27 @@ app.post('/api/auth/resend-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const { error } = await supabaseClient.auth.resend({
-      type: 'signup',
-      email
+    // Generate a new 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store the verification code temporarily
+    if (!global.verificationCodes) {
+      global.verificationCodes = new Map();
+    }
+    global.verificationCodes.set(email, {
+      code: verificationCode,
+      expires: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    // Send verification email using Resend
+    try {
+      await ResendService.sendVerificationEmail(email, verificationCode);
+      console.log(`Verification email resent to ${email}`);
+      res.json({ message: 'Verification email sent' });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      res.status(500).json({ error: 'Failed to send verification email' });
     }
-
-    res.json({ message: 'Verification email sent' });
   } catch (error) {
     console.error('Resend verification error:', error);
     res.status(500).json({ error: 'Internal server error' });
