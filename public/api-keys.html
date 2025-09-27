@@ -301,8 +301,11 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
                         </svg>
-                        <p>Your API key will appear here</p>
-                        <p class="text-sm">API key is automatically created for your account</p>
+                        <p class="mb-4">No API key found</p>
+                        <p class="text-sm mb-6">Create an API key to start generating images</p>
+                        <button onclick="createApiKey()" class="bg-stripe-purple hover:bg-stripe-purple-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                            Create API Key
+                        </button>
                     </div>
                 `;
                 return;
@@ -391,6 +394,55 @@
                     document.body.removeChild(notification);
                 }, 300);
             }, 3000);
+        }
+
+        // Create API key function
+        async function createApiKey() {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                showNotification('Please login first', 'error');
+                return;
+            }
+
+            try {
+                // Show loading state
+                const container = document.getElementById('apiKeysContainer');
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-stripe-purple mx-auto mb-4"></div>
+                        <p>Creating API key...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/api/create-key', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: 'My API Key' })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(`API key created successfully! You have ${data.credits} credits remaining.`, 'success');
+                    
+                    // Reload API keys to show the new one
+                    await loadApiKeys();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to create API key', 'error');
+                    
+                    // Reload to show the create button again
+                    await loadApiKeys();
+                }
+            } catch (error) {
+                console.error('Error creating API key:', error);
+                showNotification('Failed to create API key', 'error');
+                
+                // Reload to show the create button again
+                await loadApiKeys();
+            }
         }
 
         // Logout function
