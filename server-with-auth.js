@@ -65,7 +65,7 @@ try {
   // Create a simplified SupabaseService directly
   const { v4: uuidv4 } = require('uuid');
   
-  SupabaseService = {
+  class SimplifiedSupabaseService {
     // Get user profile
     static async getUserProfile(userId) {
       if (!supabase) return null;
@@ -82,7 +82,7 @@ try {
       }
       
       return data;
-    },
+    }
     
     // Create user profile
     static async createUserProfile(user) {
@@ -108,7 +108,7 @@ try {
       // Create default API key
       const apiKey = await this.generateApiKey(user.id, 'Default API Key');
       return apiKey;
-    },
+    }
     
     // Get or create user profile
     static async getOrCreateUserProfile(user) {
@@ -125,7 +125,7 @@ try {
         console.error('Error getting/creating user profile:', error);
         throw error;
       }
-    },
+    }
     
     // Generate API key
     static async generateApiKey(userId, name = 'Default API Key') {
@@ -162,7 +162,9 @@ try {
       
       return data;
     }
-  };
+  }
+  
+  SupabaseService = SimplifiedSupabaseService;
   
   console.log('✅ Simplified SupabaseService created');
 }
