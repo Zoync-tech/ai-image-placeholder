@@ -1,4 +1,7 @@
-require('dotenv').config();
+// Only load dotenv in development
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const axios = require('axios');
 const sharp = require('sharp');
@@ -11,6 +14,15 @@ const StripeService = new (require('./stripe-config'))();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Debug environment variables
+console.log('🔍 Environment Variables Debug:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing');
+console.log('FAL_KEY:', process.env.FAL_KEY ? 'Set' : 'Missing');
+console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing');
 
 // Cache for generated images (24 hour TTL)
 const imageCache = new NodeCache({ stdTTL: 86400 });
