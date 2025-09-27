@@ -33,23 +33,10 @@ try {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     console.log('✅ Direct Supabase client created');
-    
-    // Test the connection
-    supabase.from('profiles').select('count').limit(1)
-      .then(({ data, error }) => {
-        if (error) {
-          console.warn('⚠️  Supabase connection test failed:', error.message);
-        } else {
-          console.log('✅ Supabase connection test successful');
-        }
-      })
-      .catch((testError) => {
-        console.warn('⚠️  Supabase connection test error:', testError.message);
-      });
-    } else {
+  } else {
     console.warn('⚠️  Missing Supabase environment variables for direct initialization');
-    }
-  } catch (error) {
+  }
+} catch (error) {
   console.warn('⚠️  Direct Supabase initialization failed:', error.message);
 }
 
@@ -267,38 +254,62 @@ try {
   console.log('✅ Simplified SupabaseService created');
 }
 
-// Health check
+// Health check endpoint (simple, no dependencies)
 app.get('/health', (req, res) => {
+  try {
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: {
+        node: process.version,
+        port: PORT,
+        hasSupabase: !!supabase,
+        hasStripe: !!process.env.STRIPE_SECRET_KEY,
+        supabaseUrl: process.env.SUPABASE_URL ? 'Set' : 'Missing',
+        supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
+        supabaseAnonKey: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+      }
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
   res.json({ 
-    status: 'ok',
+    message: 'Function is working!', 
     timestamp: new Date().toISOString(),
-    environment: {
-      node: process.version,
-      port: PORT,
-      hasSupabase: !!supabase,
-      hasStripe: !!process.env.STRIPE_SECRET_KEY,
-      supabaseUrl: process.env.SUPABASE_URL ? 'Set' : 'Missing',
-      supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing'
-    }
+    method: req.method,
+    path: req.path
   });
 });
 
 // Debug endpoint
 app.get('/debug', (req, res) => {
-  res.json({
-    environment: {
-      NODE_ENV: process.env.NODE_ENV,
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'Set' : 'Missing',
-      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing',
-      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing'
-    },
-    supabase: {
-      initialized: !!supabase,
-      serviceAvailable: !!SupabaseService
-    }
-  });
+  try {
+    res.json({
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        SUPABASE_URL: process.env.SUPABASE_URL ? 'Set' : 'Missing',
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing',
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing'
+      },
+      supabase: {
+        initialized: !!supabase,
+        serviceAvailable: !!SupabaseService
+      }
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ error: 'Debug endpoint failed', details: error.message });
+  }
 });
 
 // Basic routes
@@ -729,27 +740,54 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
   }
 });
 
-// Error handling
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error', details: err.message });
+  console.error('Server Error:', err);
+  console.error('Error Stack:', err.stack);
+  
+  // Don't leak error details in production
+  const errorResponse = {
+    error: 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { details: err.message, stack: err.stack })
+  };
+  
+  res.status(500).json(errorResponse);
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+  console.log('404 - Route not found:', req.path);
+  res.status(404).json({ error: 'Not found', path: req.path });
 });
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 Health check: https://vrccim.com/health`);
-    if (supabase) {
-      console.log(`🔐 Authentication: Enabled`);
-    } else {
-      console.log(`⚠️  Authentication: Disabled`);
-    }
-  });
-}
+// Wrap everything in try-catch for better error handling
+try {
+  if (require.main === module) {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Health check: https://vrccim.com/health`);
+      if (supabase) {
+        console.log(`🔐 Authentication: Enabled`);
+      } else {
+        console.log(`⚠️  Authentication: Disabled`);
+      }
+    });
+  }
 
-module.exports = app;
+  module.exports = app;
+} catch (error) {
+  console.error('❌ Critical error during module initialization:', error);
+  console.error('Error stack:', error.stack);
+  
+  // Export a minimal error handler
+  const errorApp = express();
+  errorApp.use((req, res) => {
+    res.status(500).json({ 
+      error: 'Server initialization failed', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  module.exports = errorApp;
+}
