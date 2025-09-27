@@ -504,7 +504,10 @@ app.post('/api/create-key', async (req, res) => {
       throw insertError;
     }
 
-    res.json({ api_key: data.api_key });
+    res.json({ 
+      api_key: data.api_key,
+      credits: 5 // Default credits for new API key
+    });
   } catch (error) {
     console.error('Error creating API key:', error);
     res.status(500).json({ error: 'Internal server error' });
