@@ -58,9 +58,113 @@ try {
   const { SupabaseService: SupabaseServiceClass } = require('./supabase-config');
   SupabaseService = SupabaseServiceClass;
   console.log('✅ SupabaseService loaded from module');
-  } catch (error) {
+} catch (error) {
   console.warn('⚠️  SupabaseService module load failed:', error.message);
-  console.warn('Authentication features will be limited');
+  console.warn('Creating simplified SupabaseService...');
+  
+  // Create a simplified SupabaseService directly
+  const { v4: uuidv4 } = require('uuid');
+  
+  SupabaseService = {
+    // Get user profile
+    static async getUserProfile(userId) {
+      if (!supabase) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error getting user profile:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    
+    // Create user profile
+    static async createUserProfile(user) {
+      if (!supabase) throw new Error('Supabase not available');
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || null
+        })
+        .select()
+        .single();
+      
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw new Error(`Failed to create user profile: ${profileError.message}`);
+      }
+      
+      console.log('Profile created successfully:', profileData);
+      
+      // Create default API key
+      const apiKey = await this.generateApiKey(user.id, 'Default API Key');
+      return apiKey;
+    },
+    
+    // Get or create user profile
+    static async getOrCreateUserProfile(user) {
+      try {
+        let profile = await this.getUserProfile(user.id);
+        
+        if (!profile) {
+          await this.createUserProfile(user);
+          profile = await this.getUserProfile(user.id);
+        }
+        
+        return profile;
+      } catch (error) {
+        console.error('Error getting/creating user profile:', error);
+        throw error;
+      }
+    },
+    
+    // Generate API key
+    static async generateApiKey(userId, name = 'Default API Key') {
+      if (!supabase) throw new Error('Supabase not available');
+      
+      // First check if profile exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError || !profile) {
+        console.error('Profile not found for user:', userId, profileError);
+        throw new Error('User profile not found. Please ensure profile is created first.');
+      }
+      
+      const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
+      
+      const { data, error } = await supabase
+        .from('api_keys')
+        .insert({
+          user_id: userId,
+          api_key: apiKey,
+          name: name
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error generating API key:', error);
+        throw new Error('Failed to generate API key');
+      }
+      
+      return data;
+    }
+  };
+  
+  console.log('✅ Simplified SupabaseService created');
 }
 
 // Health check
