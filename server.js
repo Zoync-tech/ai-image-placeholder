@@ -7,7 +7,7 @@ const cors = require('cors');
 const path = require('path');
 const { fal } = require('@fal-ai/client');
 const { supabase, supabaseClient, SupabaseService } = require('./supabase-config');
-const StripeService = require('./stripe-config');
+const StripeService = new (require('./stripe-config'))();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

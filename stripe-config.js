@@ -1,12 +1,12 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
 // Stripe configuration and utility functions
 class StripeService {
   constructor() {
-    this.stripe = stripe;
+    this.stripe = null;
     this.isConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY;
     
-    if (!this.isConfigured) {
+    if (this.isConfigured) {
+      this.stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    } else {
       console.warn('⚠️  Stripe environment variables not set. Payment features will be disabled.');
       console.warn('Set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY to enable payments.');
     }
@@ -14,7 +14,7 @@ class StripeService {
 
   // Create subscription plans
   async createPlans() {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -99,7 +99,7 @@ class StripeService {
 
   // Create checkout session for subscription
   async createSubscriptionCheckout(customerId, priceId, successUrl, cancelUrl) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -130,7 +130,7 @@ class StripeService {
 
   // Create checkout session for credit refill
   async createRefillCheckout(customerId, priceId, successUrl, cancelUrl) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -161,7 +161,7 @@ class StripeService {
 
   // Create or get Stripe customer
   async createOrGetCustomer(email, userId) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -193,7 +193,7 @@ class StripeService {
 
   // Update subscription (upgrade/downgrade)
   async updateSubscription(subscriptionId, newPriceId) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -217,7 +217,7 @@ class StripeService {
 
   // Cancel subscription
   async cancelSubscription(subscriptionId) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -235,7 +235,7 @@ class StripeService {
 
   // Get subscription details
   async getSubscription(subscriptionId) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -250,7 +250,7 @@ class StripeService {
 
   // Get customer's subscriptions
   async getCustomerSubscriptions(customerId) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -269,7 +269,7 @@ class StripeService {
 
   // Verify webhook signature
   verifyWebhookSignature(payload, signature) {
-    if (!this.isConfigured) {
+    if (!this.isConfigured || !this.stripe) {
       throw new Error('Stripe not configured');
     }
 
@@ -287,4 +287,4 @@ class StripeService {
   }
 }
 
-module.exports = new StripeService();
+module.exports = StripeService;
