@@ -338,6 +338,42 @@ app.get('/ai-image-generator', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ai-image-generator.html'));
 });
 
+// Favicon and static asset routes
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
+// Handle other common static file requests
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('User-agent: *\nDisallow:');
+});
+
+// Handle any other static files that might be requested
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
+  // Try to serve static files
+  const filePath = path.join(__dirname, 'public', req.path);
+  const ext = path.extname(filePath);
+  
+  // If it's a file request and the file exists, serve it
+  if (ext && ext !== '.html') {
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        // File not found, continue to 404 handler
+        next();
+      }
+    });
+  } else {
+    // Continue to 404 handler
+    next();
+  }
+});
+
 // Authentication API routes (with error handling)
 app.post('/api/auth/login', async (req, res) => {
   try {
