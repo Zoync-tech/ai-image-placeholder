@@ -262,7 +262,6 @@ app.get('/health', (req, res) => {
       timestamp: new Date().toISOString(),
       environment: {
         node: process.version,
-        port: PORT,
         hasSupabase: !!supabase,
         hasStripe: !!process.env.STRIPE_SECRET_KEY,
         supabaseUrl: process.env.SUPABASE_URL ? 'Set' : 'Missing',
@@ -764,7 +763,7 @@ app.use((req, res) => {
 try {
   if (require.main === module) {
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🚀 Server running`);
       console.log(`📊 Health check: https://vrccim.com/health`);
       if (supabase) {
         console.log(`🔐 Authentication: Enabled`);
