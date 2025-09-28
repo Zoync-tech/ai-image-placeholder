@@ -130,45 +130,15 @@ try {
         throw new Error('User profile not found. Please ensure profile is created first.');
       }
 
-      // Ensure user exists in users table (for foreign key constraint)
-      // Since profiles.id = auth.users.id, we need to create a users record with the same ID
-      const { data: existingUser, error: userCheckError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (userCheckError && userCheckError.code === 'PGRST116') {
-        // User doesn't exist in users table, create it with data from profile
-        const { error: createUserError } = await supabase
-          .from('users')
-          .insert({
-            id: userId,
-            email: profile.email || '',
-            name: profile.full_name || '',
-            password: '', // No password needed as auth is handled by Supabase Auth
-            email_verified: true, // Assume verified if profile exists
-            credits: profile.credits || 0,
-            total_generations: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (createUserError) {
-          console.error('Error creating user record:', createUserError);
-          throw new Error('Failed to create user record');
-        }
-      } else if (userCheckError) {
-        console.error('Error checking user:', userCheckError);
-        throw new Error('Failed to verify user');
-      }
+      // Profile already exists and is connected to auth.users.id
+      // No need to create a separate users record
       
       const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
       
       const { data, error } = await supabase
         .from('api_keys')
         .insert({
-          user_id: userId,
+          user_id: profile.id, // Use profile.id instead of userId
           api_key: apiKey,
           name: name
         })

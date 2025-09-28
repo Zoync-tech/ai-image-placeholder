@@ -415,6 +415,48 @@ app.get('/api/user/profile', async (req, res) => {
   }
 });
 
+// Update user profile
+app.put('/api/user/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { name } = req.body;
+    
+    // Update profile in database
+    const { data, error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        full_name: name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating profile:', updateError);
+      return res.status(500).json({ error: 'Failed to update profile' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      profile: data
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/user/api-keys', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -493,38 +535,8 @@ app.post('/api/create-key', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user profile' });
     }
 
-    // Ensure user exists in users table (for foreign key constraint)
-    // Since profiles.id = auth.users.id, we need to create a users record with the same ID
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (userCheckError && userCheckError.code === 'PGRST116') {
-      // User doesn't exist in users table, create it with data from profile
-      const { error: createUserError } = await supabase
-        .from('users')
-        .insert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name || profile.full_name || '',
-          password: '', // No password needed as auth is handled by Supabase Auth
-          email_verified: user.email_confirmed_at ? true : false,
-          credits: profile.credits || 0,
-          total_generations: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (createUserError) {
-        console.error('Error creating user record:', createUserError);
-        return res.status(500).json({ error: 'Failed to create user record' });
-      }
-    } else if (userCheckError) {
-      console.error('Error checking user:', userCheckError);
-      return res.status(500).json({ error: 'Failed to verify user' });
-    }
+    // Profile already exists and is connected to auth.users.id
+    // No need to create a separate users record
 
     const { v4: uuidv4 } = require('uuid');
     const apiKey = uuidv4() + '-' + Math.random().toString(36).substr(2, 8);
@@ -532,7 +544,7 @@ app.post('/api/create-key', async (req, res) => {
     const { data, error: insertError } = await supabase
       .from('api_keys')
       .insert({
-        user_id: user.id,
+        user_id: profile.id, // Use profile.id instead of user.id
         api_key: apiKey,
         name: 'Default API Key'
       })
