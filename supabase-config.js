@@ -24,12 +24,24 @@ class SupabaseService {
   // Create user profile and API key when user signs up
   static async createUserProfile(user) {
     try {
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      if (existingProfile) {
+        console.log('Profile already exists for user:', user.id);
+        return existingProfile;
+      }
+      
       // Create profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: user.id,
-          email: user.email,
+          email: user.email || '',
           full_name: user.user_metadata?.full_name || null
         })
         .select()
@@ -72,16 +84,32 @@ class SupabaseService {
   
   // Generate a new API key for user
   static async generateApiKey(userId, name = 'Default API Key') {
-    // First check if profile exists
-    const { data: profile, error: profileError } = await supabase
+    // First check if profile exists, create if it doesn't
+    let { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', userId)
       .single();
     
     if (profileError || !profile) {
-      console.error('Profile not found for user:', userId, profileError);
-      throw new Error('User profile not found. Please ensure profile is created first.');
+      console.log('Profile not found, creating one for user:', userId);
+      // Create profile if it doesn't exist
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: '', // Will be updated by the calling function
+          full_name: null
+        })
+        .select('id')
+        .single();
+      
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        throw new Error('Failed to create user profile');
+      }
+      
+      profile = newProfile;
     }
     
     const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
