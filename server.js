@@ -493,6 +493,32 @@ app.post('/api/create-key', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user profile' });
     }
 
+    // Ensure user exists in users table (for foreign key constraint)
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (userCheckError && userCheckError.code === 'PGRST116') {
+      // User doesn't exist, create it
+      const { error: createUserError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (createUserError) {
+        console.error('Error creating user record:', createUserError);
+        return res.status(500).json({ error: 'Failed to create user record' });
+      }
+    } else if (userCheckError) {
+      console.error('Error checking user:', userCheckError);
+      return res.status(500).json({ error: 'Failed to verify user' });
+    }
+
     const { v4: uuidv4 } = require('uuid');
     const apiKey = uuidv4() + '-' + Math.random().toString(36).substr(2, 8);
 
