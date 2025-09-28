@@ -356,7 +356,7 @@ app.get('/dashboard', (req, res) => {
 if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`🚀 AI Image Placeholder server running on port ${PORT}`);
-    console.log(`📝 Example usage: https://vrccim.com/600x400.jpg?api_key=${defaultApiKey}&text=Hello+World`);
+    console.log(`📝 Example usage: http://localhost:${PORT}/600x400.jpg?api_key=${defaultApiKey}&text=Hello+World`);
     console.log(`🔑 Make sure to set FAL_KEY and RESEND_API_KEY environment variables`);
   });
 }

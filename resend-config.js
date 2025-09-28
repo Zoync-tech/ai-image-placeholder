@@ -135,3 +135,4 @@ class ResendService {
 }
 
 module.exports = ResendService;
+

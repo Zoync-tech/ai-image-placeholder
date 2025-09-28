@@ -610,6 +610,52 @@ app.get('/api/user/profile', async (req, res) => {
   }
 });
 
+// Update user profile
+app.put('/api/user/profile', async (req, res) => {
+  try {
+    if (!supabase || !SupabaseService) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { name } = req.body;
+    
+    // Update profile in database
+    const { data, error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        full_name: name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating profile:', updateError);
+      return res.status(500).json({ error: 'Failed to update profile' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      profile: data
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/user/api-keys', async (req, res) => {
   try {
     if (!supabase || !SupabaseService) {
@@ -654,6 +700,53 @@ app.get('/api/user/image-generations', async (req, res) => {
     res.json({ generations });
   } catch (error) {
     console.error('Error getting image generations:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Change password endpoint
+app.post('/api/user/change-password', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { current_password, new_password } = req.body;
+    
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (new_password.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+    }
+
+    // Update password using Supabase auth
+    const { data, error: updateError } = await supabase.auth.updateUser({
+      password: new_password
+    });
+
+    if (updateError) {
+      console.error('Error updating password:', updateError);
+      return res.status(400).json({ error: updateError.message || 'Failed to update password' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Error changing password:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
