@@ -89,7 +89,7 @@ class SupabaseService {
     const { data, error } = await supabase
       .from('api_keys')
       .insert({
-        user_id: userId,
+        user_id: profile.id, // Use profile.id instead of userId
         api_key: apiKey,
         name: name
       })
@@ -176,10 +176,22 @@ class SupabaseService {
   
   // Log image generation
   static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
+    // Get profile to ensure we use the correct ID
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error('Profile not found for user:', userId, profileError);
+      return;
+    }
+    
     const { error } = await supabase
       .from('image_generations')
       .insert({
-        user_id: userId,
+        user_id: profile.id, // Use profile.id instead of userId
         api_key_id: apiKeyId,
         prompt: prompt,
         dimensions: dimensions,
@@ -206,10 +218,22 @@ class SupabaseService {
   
   // Get user's API keys
   static async getUserApiKeys(userId) {
+    // Get profile to ensure we use the correct ID
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error('Profile not found for user:', userId, profileError);
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('api_keys')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', profile.id) // Use profile.id instead of userId
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -222,10 +246,22 @@ class SupabaseService {
   
   // Get user's image generation history
   static async getUserImageHistory(userId, limit = 50) {
+    // Get profile to ensure we use the correct ID
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error('Profile not found for user:', userId, profileError);
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('image_generations')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', profile.id) // Use profile.id instead of userId
       .order('created_at', { ascending: false })
       .limit(limit);
     
