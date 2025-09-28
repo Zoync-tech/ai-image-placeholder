@@ -129,6 +129,32 @@ try {
         console.error('Profile not found for user:', userId, profileError);
         throw new Error('User profile not found. Please ensure profile is created first.');
       }
+
+      // Ensure user exists in users table (for foreign key constraint)
+      const { data: existingUser, error: userCheckError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (userCheckError && userCheckError.code === 'PGRST116') {
+        // User doesn't exist, create it
+        const { error: createUserError } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (createUserError) {
+          console.error('Error creating user record:', createUserError);
+          throw new Error('Failed to create user record');
+        }
+      } else if (userCheckError) {
+        console.error('Error checking user:', userCheckError);
+        throw new Error('Failed to verify user');
+      }
       
       const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
       
