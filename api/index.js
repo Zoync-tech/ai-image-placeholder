@@ -131,6 +131,7 @@ try {
       }
 
       // Ensure user exists in users table (for foreign key constraint)
+      // Since profiles.id = auth.users.id, we need to create a users record with the same ID
       const { data: existingUser, error: userCheckError } = await supabase
         .from('users')
         .select('id')
@@ -138,11 +139,17 @@ try {
         .single();
 
       if (userCheckError && userCheckError.code === 'PGRST116') {
-        // User doesn't exist, create it
+        // User doesn't exist in users table, create it with data from profile
         const { error: createUserError } = await supabase
           .from('users')
           .insert({
             id: userId,
+            email: profile.email || '',
+            name: profile.full_name || '',
+            password: '', // No password needed as auth is handled by Supabase Auth
+            email_verified: true, // Assume verified if profile exists
+            credits: profile.credits || 0,
+            total_generations: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
