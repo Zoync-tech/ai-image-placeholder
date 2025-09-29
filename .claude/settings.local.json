@@ -11,7 +11,9 @@
       "Bash(git add:*)",
       "Bash(fly scale memory:*)",
       "Bash(fly status:*)",
-      "Bash(fly machine list:*)"
+      "Bash(fly machine list:*)",
+      "Bash(fly scale count:*)",
+      "Bash(fly machine update:*)"
     ],
     "deny": [],
     "ask": []

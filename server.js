@@ -62,6 +62,9 @@ async function validateToken(token) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Request deduplication system to prevent multiple API calls for same prompt
+const ongoingGenerations = new Map(); // Key: prompt+dimensions, Value: Promise
+
 // Debug environment variables
 console.log('🔍 Environment Variables Debug:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -1692,6 +1695,33 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       console.log('Cache lookup failed, proceeding with generation:', cacheError.message);
     }
 
+    // Request deduplication: Check if generation is already in progress for this prompt+dimensions
+    const deduplicationKey = `${prompt}|${dimensions}`;
+
+    if (ongoingGenerations.has(deduplicationKey)) {
+      console.log(`🔄 Request QUEUED: Generation already in progress for "${prompt}" at ${dimensions}`);
+      try {
+        // Wait for the ongoing generation to complete
+        const result = await ongoingGenerations.get(deduplicationKey);
+        console.log(`✅ Request SERVED: Using result from ongoing generation for "${prompt}" at ${dimensions}`);
+
+        // Serve the generated image
+        const imageResponse = await fetch(result.imageUrl);
+        if (imageResponse.ok) {
+          const imageBuffer = await imageResponse.arrayBuffer();
+          res.set({
+            'Content-Type': `image/${format === 'jpg' ? 'jpeg' : format}`,
+            'Cache-Control': 'public, max-age=31536000',
+            'X-Cache-Status': 'DEDUPED'
+          });
+          return res.send(Buffer.from(imageBuffer));
+        }
+      } catch (dedupError) {
+        console.log('Error waiting for ongoing generation:', dedupError.message);
+        // Continue to generate new image if deduplication fails
+      }
+    }
+
     // Check API key if provided
     let userId = null;
     if (api_key) {
@@ -1774,12 +1804,34 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       }
     }
 
-    // Generate image
-    console.log(`Generating ${w}x${h} image with prompt: "${prompt}"`);
-    const imageUrl = await generateImageWithFAL(prompt, w, h);
+    // Create generation promise and store in deduplication map
+    const generationPromise = (async () => {
+      try {
+        // Generate image
+        console.log(`🚀 GENERATING ${w}x${h} image with prompt: "${prompt}"`);
+        const imageUrl = await generateImageWithFAL(prompt, w, h);
 
-    // Cache the result
-    imageCache.set(cacheKey, imageUrl);
+        // Cache the result
+        imageCache.set(cacheKey, imageUrl);
+
+        return { imageUrl, success: true };
+      } catch (error) {
+        console.error('Error in generation promise:', error);
+        throw error;
+      } finally {
+        // Always clean up the ongoing generation map
+        ongoingGenerations.delete(deduplicationKey);
+        console.log(`🧹 Cleaned up ongoing generation for: "${prompt}" at ${dimensions}`);
+      }
+    })();
+
+    // Store the promise in the deduplication map
+    ongoingGenerations.set(deduplicationKey, generationPromise);
+    console.log(`📝 Started generation tracking for: "${prompt}" at ${dimensions}`);
+
+    // Wait for our own generation to complete
+    const result = await generationPromise;
+    const imageUrl = result.imageUrl;
 
     // Log the generation
     if (userId) {
