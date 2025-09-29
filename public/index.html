@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="https://oefhoywofsuarvkucexx.supabase.co/storage/v1/object/public/graphics/VRC%20CIM%20Favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/preline@2.0.3/dist/preline.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -31,64 +30,50 @@
         }
     </script>
 </head>
-<body class="bg-gray-900">
+<body class="bg-gray-900 text-white">
     <!-- Navigation -->
-    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+    <nav class="bg-gray-900 border-b border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <img class="h-8 w-auto" src="https://oefhoywofsuarvkucexx.supabase.co/storage/v1/object/public/graphics/VRC%20CIM%20Logo.png" alt="VRC Cloud Instance Manager">
+                    <div class="flex-shrink-0 flex items-center space-x-3">
+                        <img class="h-8 w-auto" src="https://oefhoywofsuarvkucexx.supabase.co/storage/v1/object/public/graphics/VRC%20CIM%20Logo.png" alt="VRC Cloud">
                     </div>
-                    <div class="hidden md:ml-6 md:flex md:space-x-8">
-                                <a href="#features" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">Features</a>
-                                <a href="#demo" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">Try It</a>
-                                <a href="#about" class="text-gray-300 hover:text-primary-400 px-3 py-2 text-sm font-medium transition-colors">About</a>
+                    <div class="hidden md:ml-8 md:flex md:space-x-8">
+                        <a href="#features" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">Features</a>
+                        <a href="#pricing" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">Pricing</a>
+                        <a href="#demo" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">About</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                            <a href="/auth" class="bg-gray-700 text-primary-400 border border-primary-600 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <a href="/auth" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
                         Sign In
                     </a>
                     <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         Get Started
                     </a>
                 </div>
-                <!-- Mobile menu button -->
-                <div class="md:hidden flex items-center">
-                            <button type="button" class="text-gray-400 hover:text-gray-200 hover:bg-gray-700 p-2 rounded-md" data-hs-collapse="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
-                        <svg class="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <!-- Mobile menu -->
-            <div id="navbar-collapse" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:hidden">
-                <div class="py-2 md:py-0 space-y-1">
-                            <a href="#features" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">Features</a>
-                            <a href="#demo" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">Try It</a>
-                            <a href="#about" class="block text-gray-300 hover:bg-gray-700 px-3 py-2 text-sm font-medium">About</a>
-                </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-primary-600 to-blue-700 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <section class="pt-20 pb-32 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h1 class="text-4xl md:text-6xl font-bold mb-6">
-                    VRC Cloud Instance Manager
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    <span class="text-white">VRC Cloud Instance</span><br>
+                    <span class="text-white">Manager</span>
                 </h1>
-                <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                    Create stunning AI-generated images from text descriptions inside your VRC instance, powered by cutting-edge AI technology
+                <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    Create stunning AI-generated images from text descriptions inside your<br>
+                    VRC experience, powered by cutting-edge AI technology
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="/auth" class="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                    <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
                         Get Started Free
                     </a>
-                    <a href="#demo" class="bg-primary-800 text-white hover:bg-primary-900 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                    <a href="#demo" class="border border-gray-600 text-white hover:bg-gray-800 px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105">
                         Try Demo
                     </a>
                 </div>
@@ -97,209 +82,439 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 bg-gray-800">
+    <section id="features" class="py-24 bg-gray-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Powerful AI Image Generation</h2>
-                <p class="text-xl text-gray-300 max-w-3xl mx-auto">Transform your VRC experience with our professional-grade AI image generation service</p>
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Powerful AI Image Generation</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Transform your VRC worlds with state-of-the-art AI image generation</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                        <div class="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                    <div class="bg-primary-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
                         </svg>
                     </div>
-                            <h3 class="text-xl font-semibold text-white mb-4">AI-Powered Generation</h3>
-                            <p class="text-gray-300">Create stunning, unique images from simple text descriptions using advanced AI technology</p>
-                    <div class="mt-6">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            ✓ Available Now
-                        </span>
-                    </div>
-                            </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">AI-Powered Generation</h3>
+                    <p class="text-gray-400 leading-relaxed">Transform your descriptions into stunning, high-quality images with our advanced digital art in seconds with our AI technology</p>
+                </div>
 
                 <!-- Feature 2 -->
-                        <div class="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                    <div class="bg-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                            </div>
-                            <h3 class="text-xl font-semibold text-white mb-4">Lightning Fast</h3>
-                            <p class="text-gray-300">Generate high-quality images in seconds with our optimized cloud infrastructure</p>
-                    <div class="mt-6">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                            ⚡ Ultra Fast
-                        </span>
-                            </div>
-                        </div>
-                        
-                <!-- Feature 3 -->
-                        <div class="bg-gradient-to-br from-green-900 to-emerald-900 rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                    <div class="bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                        </div>
-                            <h3 class="text-xl font-semibold text-white mb-4">VRC Integration</h3>
-                            <p class="text-gray-300">Seamlessly integrate with VRChat using simple URL endpoints for real-time image generation</p>
-                    <div class="mt-6">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            🎮 VRC Ready
-                        </span>
                     </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">Lightning Fast</h3>
+                    <p class="text-gray-400 leading-relaxed">Generate ultra high-quality images in seconds, not minutes. Optimized for real-time VRC experience</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">VRC Integration</h3>
+                    <p class="text-gray-400 leading-relaxed">Seamlessly integrate with your VRC worlds and share your creations with friends instantly</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Demo Section -->
-    <section id="demo" class="py-20 bg-gray-700">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Try It Now</h2>
-                <p class="text-xl text-gray-300">Test the AI Image Generator with your API key</p>
+    <!-- Second Hero Section -->
+    <section class="py-24 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h2 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    <span class="text-white">VRC Cloud Instance</span><br>
+                    <span class="text-white">Manager</span>
+                </h2>
+                <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    Create stunning AI-generated images from text descriptions inside your<br>
+                    VRC experience, powered by cutting-edge AI technology
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        Get Started Free
+                    </a>
+                    <a href="#demo" class="border border-gray-600 text-white hover:bg-gray-800 px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105">
+                        Try Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Second Features Section -->
+    <section class="py-24 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Powerful AI Image Generation</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Transform your VRC worlds with state-of-the-art AI image generation</p>
             </div>
 
-            <div class="bg-gray-800 rounded-2xl shadow-xl p-8">
-                <form id="demoForm" class="space-y-6">
-                    <!-- API Key Input -->
-                    <div>
-                                <label for="demoApiKey" class="block text-sm font-medium text-gray-300 mb-2">API Key <span class="text-red-400">*</span></label>
-                        <input type="text" id="demoApiKey" placeholder="Enter your API key (get one from dashboard)" required
-                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                                <p class="mt-2 text-sm text-gray-400">Sign up for free to get your API key and 5 free credits!</p>
-                        </div>
-                        
-                    <!-- Prompt Input -->
-                    <div>
-                                <label for="demoPrompt" class="block text-sm font-medium text-gray-300 mb-2">Image Prompt</label>
-                        <textarea id="demoPrompt" rows="3" placeholder="Describe the image you want to generate... (e.g., 'a beautiful sunset over mountains', 'abstract art with vibrant colors')"
-                                  class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"></textarea>
-                        </div>
-                        
-                    <!-- Dimensions -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                                    <label for="demoWidth" class="block text-sm font-medium text-gray-300 mb-2">Width</label>
-                            <input type="number" id="demoWidth" value="600" min="1" max="4096"
-                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                        </div>
-                        <div>
-                                    <label for="demoHeight" class="block text-sm font-medium text-gray-300 mb-2">Height</label>
-                            <input type="number" id="demoHeight" value="400" min="1" max="4096"
-                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                        </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
                     </div>
-                    
-                    <!-- Size Presets -->
-                    <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-3">Quick Size Presets:</label>
-                        <div class="flex flex-wrap gap-2">
-                                    <button type="button" onclick="setSize(600, 400)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">600×400</button>
-                            <button type="button" onclick="setSize(800, 600)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">800×600</button>
-                            <button type="button" onclick="setSize(1024, 768)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1024×768</button>
-                            <button type="button" onclick="setSize(1920, 1080)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1920×1080</button>
-                            <button type="button" onclick="setSize(512, 512)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">512×512</button>
-                            <button type="button" onclick="setSize(1024, 1024)" class="px-4 py-2 bg-gray-700 hover:bg-primary-600 hover:text-white rounded-lg text-sm font-medium transition-colors">1024×1024</button>
-                        </div>
-                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">AI-Powered Generation</h3>
+                    <p class="text-gray-400 leading-relaxed">Transform your descriptions into stunning, high-quality images with our advanced digital art in seconds with our AI technology</p>
+                </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <button type="submit" class="flex-1 bg-primary-600 text-white hover:bg-primary-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                                <span class="btn-text">Generate AI Image</span>
+                <!-- Feature 2 -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">Lightning Fast</h3>
+                    <p class="text-gray-400 leading-relaxed">Generate ultra high-quality images in seconds, not minutes. Optimized for real-time VRC experience</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center group hover:bg-gray-750 transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-4">VRC Integration</h3>
+                    <p class="text-gray-400 leading-relaxed">Seamlessly integrate with your VRC worlds and share your creations with friends instantly</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Simple, Fair Pricing</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Flexible pricing for every need. Start free, upgrade when you're ready.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Free Trial -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center hover:bg-gray-750 transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-white mb-4">Free Trial</h3>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold text-green-500">FREE</span>
+                        <span class="text-gray-400 ml-2">5 credits to try</span>
+                    </div>
+                    <ul class="text-gray-300 space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            5 AI image generations
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            All image sizes supported
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            VRC integration ready
+                        </li>
+                    </ul>
+                    <a href="/auth" class="w-full bg-green-600 text-white hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 block">
+                        Try Free
+                    </a>
+                </div>
+
+                <!-- Standard Pack -->
+                <div class="bg-gradient-to-br from-primary-900 to-primary-800 border border-primary-600 rounded-2xl p-8 text-center relative transform scale-105 hover:scale-110 transition-all duration-300">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Standard Pack</h3>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold text-white">$10</span>
+                        <span class="text-gray-300 ml-2">/ month</span>
+                        <div class="text-sm text-gray-400 mt-1">100 credits per month</div>
+                    </div>
+                    <ul class="text-gray-200 space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            100 AI image generations
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Premium support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            All features included
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-yellow-300">Best value</span>
+                        </li>
+                    </ul>
+                    <a href="/auth" class="w-full bg-white text-primary-900 hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 block">
+                        Get Standard
+                    </a>
+                </div>
+
+                <!-- Premium Pack -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 text-center hover:bg-gray-750 transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-white mb-4">Premium Pack</h3>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold text-white">$25</span>
+                        <span class="text-gray-400 ml-2">/ month</span>
+                        <div class="text-sm text-gray-400 mt-1">300 credits per month</div>
+                    </div>
+                    <ul class="text-gray-300 space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            300 AI image generations
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Priority support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Dedicated support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-yellow-300">40% savings</span>
+                        </li>
+                    </ul>
+                    <a href="/auth" class="w-full bg-primary-600 text-white hover:bg-primary-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 block">
+                        Get Premium
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <p class="text-gray-400 mb-4">All plans include:</p>
+                <div class="flex flex-wrap justify-center gap-6 text-sm text-gray-300">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        High-resolution images
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Commercial usage rights
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        No watermarks
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        API access
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Try It Now Section -->
+    <section id="demo" class="py-24 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Try It Now</h2>
+                <p class="text-xl text-gray-400">Test the AI Image generator with your API key</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Left Column - Form -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8">
+                    <form id="demoForm" class="space-y-6">
+                        <!-- API Key -->
+                        <div>
+                            <label for="demoApiKey" class="block text-sm font-medium text-gray-300 mb-2">API Key</label>
+                            <input type="text" id="demoApiKey" placeholder="Enter your API key from the dashboard" required
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                        </div>
+
+                        <!-- Image Prompt -->
+                        <div>
+                            <label for="demoPrompt" class="block text-sm font-medium text-gray-300 mb-2">Image Prompt</label>
+                            <textarea id="demoPrompt" rows="3" placeholder="Create a poster for a nightclub with the text 'VRC CIM Lounge' on it"
+                                      class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"></textarea>
+                            <p class="mt-2 text-sm text-gray-400">Describe what you want to create</p>
+                        </div>
+
+                        <!-- Dimensions -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="demoWidth" class="block text-sm font-medium text-gray-300 mb-2">Width</label>
+                                <input type="number" id="demoWidth" value="512" min="1" max="4096"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                            </div>
+                            <div>
+                                <label for="demoHeight" class="block text-sm font-medium text-gray-300 mb-2">Height</label>
+                                <input type="number" id="demoHeight" value="512" min="1" max="4096"
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                            </div>
+                        </div>
+
+                        <!-- Quick Presets -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-3">Quick Presets</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="setSize(512, 512)" class="px-3 py-2 bg-gray-700 hover:bg-primary-600 text-sm rounded-lg transition-colors">Square</button>
+                                <button type="button" onclick="setSize(1024, 768)" class="px-3 py-2 bg-gray-700 hover:bg-primary-600 text-sm rounded-lg transition-colors">Landscape</button>
+                                <button type="button" onclick="setSize(768, 1024)" class="px-3 py-2 bg-gray-700 hover:bg-primary-600 text-sm rounded-lg transition-colors">Portrait</button>
+                                <button type="button" onclick="setSize(1920, 1080)" class="px-3 py-2 bg-gray-700 hover:bg-primary-600 text-sm rounded-lg transition-colors">Widescreen</button>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button type="submit" class="w-full bg-primary-600 text-white hover:bg-primary-700 px-6 py-4 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <span class="btn-text flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Generate AI Image
+                            </span>
                             <div class="loading hidden flex items-center justify-center">
                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 Generating...
-                                </div>
-                            </button>
-                            
-                        <button type="button" onclick="generateLink()" class="flex-1 bg-gray-600 text-white hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105">
-                            Generate Link
-                            </button>
-                        </div>
+                            </div>
+                        </button>
+
+                        <!-- Random Link Button -->
+                        <button type="button" onclick="generateLink()" class="w-full bg-gray-700 text-white hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition-all">
+                            Random Link
+                        </button>
                     </form>
 
-                <!-- Generated URL Section -->
-                <div id="linkSection" class="hidden mt-8 p-6 bg-gray-50 rounded-xl">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Generated URL</h4>
-                    <div class="flex gap-3">
-                        <input type="text" id="generatedUrl" readonly
-                               class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg font-mono text-sm">
-                        <button onclick="copyUrl()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            Copy URL
-                        </button>
+                    <!-- Error Message -->
+                    <div id="demoErrorMessage" class="hidden mt-4 p-4 bg-red-900 border border-red-700 rounded-lg">
+                        <p class="text-red-300"></p>
                     </div>
                 </div>
 
-                <!-- Error Message -->
-                <div id="demoErrorMessage" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-red-800"></p>
+                <!-- Right Column - Generated Image -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8">
+                    <h4 class="text-lg font-semibold text-white mb-4">Generated Image</h4>
+                    <div id="demoImageContainer" class="bg-gray-700 border-2 border-dashed border-gray-600 rounded-xl p-12 text-center min-h-[400px] flex items-center justify-center hover:border-primary-500 transition-colors">
+                        <div class="text-gray-400 text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-lg">Enter a prompt and click "Generate AI Image"</p>
+                            <p class="text-sm mt-2">to create your image</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Generated Image Display -->
-            <div class="mt-8 bg-white rounded-2xl shadow-xl p-8">
-                <h4 class="text-lg font-semibold text-gray-900 mb-4">Generated Image</h4>
-                <div id="demoImageContainer" class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center min-h-[300px] flex items-center justify-center hover:border-primary-300 transition-colors">
-                    <div class="text-gray-500 text-lg">
-                            Enter a text prompt and click "Generate AI Image" to create your image
-                    </div>
+            <!-- Generated URL Section -->
+            <div id="linkSection" class="hidden mt-8 p-6 bg-gray-800 border border-gray-700 rounded-xl">
+                <h4 class="text-lg font-semibold text-white mb-3">Generated URL</h4>
+                <div class="flex gap-3">
+                    <input type="text" id="generatedUrl" readonly
+                           class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg font-mono text-sm">
+                    <button onclick="copyUrl()" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Copy URL
+                    </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="py-20 bg-gray-800">
+    <!-- Powered by AI Section -->
+    <section class="py-24 bg-gray-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-8">Powered by Advanced AI</h2>
-                <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
-                    Our service uses cutting-edge AI technology to generate high-quality images that seamlessly integrate with your VRChat experience. Whether you're creating content for worlds, avatars, or interactive experiences, our AI delivers professional results every time.
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-8">Powered by Advanced AI</h2>
+                <p class="text-xl text-gray-400 max-w-4xl mx-auto mb-12 leading-relaxed">
+                    Our service uses cutting-edge AI technology to generate high-quality images that seamlessly
+                    integrate with your VRChat experience. Whether you're creating immersive environments or sharing
+                    creative content, our AI delivers professional results every time.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="/auth" class="bg-primary-600 text-white hover:bg-primary-700 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
-                        Start Creating Today
-                    </a>
-                    <a href="https://www.vrccim.com/ai-image-generator.html" class="bg-white text-primary-600 border-2 border-primary-600 hover:bg-primary-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105">
-                        AI Image Generator
-                    </a>
-                </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
+    <footer class="bg-gray-900 border-t border-gray-800 py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <img class="h-8 w-auto mx-auto mb-4" src="https://oefhoywofsuarvkucexx.supabase.co/storage/v1/object/public/graphics/VRC%20CIM%20Logo.png" alt="VRC Cloud Instance Manager">
-                <p class="text-gray-400 mb-4">Cloud solutions to simplify VRC content management</p>
-                <div class="flex justify-center space-x-6">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <img class="h-8 w-auto" src="https://oefhoywofsuarvkucexx.supabase.co/storage/v1/object/public/graphics/VRC%20CIM%20Logo.png" alt="VRC Cloud">
+                </div>
+                <p class="text-gray-400 mb-6">AI-powered content creation for VRChat</p>
+                <div class="flex justify-center space-x-6 mb-8">
                     <a href="/auth" class="text-gray-400 hover:text-white transition-colors">Sign Up</a>
-                    <a href="https://www.vrccim.com/ai-image-generator.html" class="text-gray-400 hover:text-white transition-colors">AI Generator</a>
+                    <a href="/ai-image-generator.html" class="text-gray-400 hover:text-white transition-colors">AI Generator</a>
                     <a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a>
                 </div>
-                <div class="mt-8 pt-8 border-t border-gray-800">
+                <div class="pt-8 border-t border-gray-800">
                     <p class="text-gray-400 text-sm">© 2025 VRC Cloud Instance Manager. All rights reserved.</p>
+                </div>
             </div>
         </div>
-    </div>
     </footer>
 
     <script>
         let demoApiKey = '';
 
+        // Check if user is already signed in and redirect
+        function checkAuthAndRedirect() {
+            const token = localStorage.getItem('userToken');
+            if (token) {
+                // User is signed in, redirect to ai-image-generator.html
+                window.location.href = '/ai-image-generator.html';
+                return true; // Prevent further execution
+            }
+            return false; // User not signed in, continue normal flow
+        }
+
         // Load demo API key on page load
         window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication first
+            if (checkAuthAndRedirect()) {
+                return; // Stop execution if redirecting
+            }
+
             await loadDemoApiKey();
         });
 
@@ -329,7 +544,7 @@
 
         demoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const apiKey = demoApiKeyInput.value.trim();
             const prompt = demoPromptInput.value || 'abstract art';
             const width = demoWidthInput.value;
@@ -348,23 +563,30 @@
 
             try {
                 const url = `/${width}x${height}.jpg?api_key=${apiKey}&text=${encodeURIComponent(prompt)}`;
-                
+
                 // Create image element
                 const img = new Image();
-                img.className = 'max-w-full max-h-96 rounded-lg shadow-lg';
-                
+                img.className = 'max-w-full max-h-full rounded-lg shadow-lg';
+
                 img.onload = function() {
                     demoImageContainer.innerHTML = '';
                     demoImageContainer.appendChild(img);
-                    
+
                     // Hide loading
                     demoGenerateBtn.disabled = false;
-                    demoBtnText.style.display = 'block';
+                    demoBtnText.style.display = 'flex';
                     demoLoading.classList.add('hidden');
                 };
 
                 img.onerror = function() {
-                    throw new Error('Failed to load image');
+                    console.error('Failed to load image');
+
+                    // Hide loading
+                    demoGenerateBtn.disabled = false;
+                    demoBtnText.style.display = 'flex';
+                    demoLoading.classList.add('hidden');
+
+                    showError('Failed to load image. Please try again.');
                 };
 
                 img.src = url;
@@ -372,10 +594,10 @@
             } catch (error) {
                 console.error('Error:', error);
                 showError('Failed to generate image. Please check your API key and try again.');
-                
+
                 // Hide loading
                 demoGenerateBtn.disabled = false;
-                demoBtnText.style.display = 'block';
+                demoBtnText.style.display = 'flex';
                 demoLoading.classList.add('hidden');
             }
         });
@@ -394,7 +616,7 @@
 
             const baseUrl = window.location.origin;
             const url = `${baseUrl}/${width}x${height}.jpg?api_key=${apiKey}&text=${encodeURIComponent(prompt)}`;
-            
+
             generatedUrlInput.value = url;
             linkSection.classList.remove('hidden');
             hideError();
@@ -404,17 +626,15 @@
         function copyUrl() {
             generatedUrlInput.select();
             generatedUrlInput.setSelectionRange(0, 99999);
-            
+
             try {
                 document.execCommand('copy');
                 const copyBtn = event.target;
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = 'Copied!';
-                copyBtn.className = copyBtn.className.replace('bg-green-600', 'bg-green-500');
-                
+
                 setTimeout(() => {
                     copyBtn.textContent = originalText;
-                    copyBtn.className = copyBtn.className.replace('bg-green-500', 'bg-green-600');
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy: ', err);
@@ -438,22 +658,6 @@
             demoErrorMessage.classList.add('hidden');
         }
 
-        // Load example from URL parameters if present
-        const urlParams = new URLSearchParams(window.location.search);
-        const textParam = urlParams.get('text');
-        const dimensionsMatch = window.location.pathname.match(/\/(\d+)x(\d+)/);
-        
-        if (textParam || dimensionsMatch) {
-            if (textParam) {
-                demoPromptInput.value = decodeURIComponent(textParam);
-            }
-            if (dimensionsMatch) {
-                demoWidthInput.value = dimensionsMatch[1];
-                demoHeightInput.value = dimensionsMatch[2];
-            }
-            demoForm.dispatchEvent(new Event('submit'));
-        }
-
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -468,6 +672,5 @@
             });
         });
     </script>
-    <script src="/admin.js"></script>
 </body>
 </html>

@@ -969,7 +969,22 @@
                 };
 
                 img.onerror = function() {
-                    throw new Error('Failed to load image');
+                    console.error('Failed to load image');
+
+                    // Hide loading
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'block';
+                    loading.classList.add('hidden');
+
+                    imageContainer.innerHTML = `
+                        <div class="text-red-500 text-center">
+                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>Failed to load image</p>
+                            <p class="text-sm mt-2">Please try again</p>
+                        </div>
+                    `;
                 };
 
                 img.src = url;

@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production
 
+# Install ffmpeg for video generation (H.264 encoding)
+RUN apk add --no-cache ffmpeg
+
 # Copy application files
 COPY . .
 

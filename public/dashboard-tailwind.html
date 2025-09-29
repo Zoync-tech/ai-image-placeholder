@@ -588,7 +588,15 @@
                 };
 
                 img.onerror = function() {
-                    throw new Error('Failed to load image');
+                    console.error('Failed to load image');
+
+                    // Hide loading
+                    demoGenerateBtn.disabled = false;
+                    demoBtnText.style.display = 'block';
+                    demoLoading.classList.add('hidden');
+
+                    demoErrorMessage.textContent = 'Failed to load image. Please try again.';
+                    demoErrorMessage.classList.remove('hidden');
                 };
 
                 img.src = url;
