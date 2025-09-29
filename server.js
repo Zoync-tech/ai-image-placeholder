@@ -1708,7 +1708,7 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       userId = apiKeyData.user_id;
     }
 
-    const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    // prompt is already defined earlier in the cache check section
     const cacheKey = `${w}x${h}-${format}-${encodeURIComponent(prompt)}`;
 
     // Check cache first
@@ -1947,7 +1947,7 @@ app.get('/:width(\\d+)x:height(\\d+).mp4', async (req, res) => {
       apiKeyRecord = apiKeyData;
     }
 
-    const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    // prompt is already defined earlier in the cache check section
     const cacheKey = `${w}x${h}-mp4-${encodeURIComponent(prompt)}-${duration}`;
 
     // First: check Supabase Storage cache to avoid rework & API calls
