@@ -1645,9 +1645,51 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
     // Validate dimensions
     const w = parseInt(width);
     const h = parseInt(height);
-    
+
     if (w < 1 || w > 2048 || h < 1 || h > 2048) {
       return res.status(400).json({ error: 'Invalid dimensions. Must be between 1x1 and 2048x2048' });
+    }
+
+    // Use the same prompt format that will be used for generation and database storage
+    const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    const dimensions = `${w}x${h}`;
+
+    // Check for existing image with same prompt and dimensions (cache check)
+    try {
+      const { data: existingImage, error: cacheError } = await supabase
+        .from('image_generations')
+        .select('public_url')
+        .eq('prompt', prompt)
+        .eq('dimensions', dimensions)
+        .eq('success', true)
+        .is('public_url', 'not.null')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!cacheError && existingImage && existingImage.public_url) {
+        console.log(`🎯 Cache HIT: Serving existing image for prompt "${prompt}" at ${dimensions}`);
+
+        // Fetch the existing image and serve it
+        try {
+          const imageResponse = await fetch(existingImage.public_url);
+          if (imageResponse.ok) {
+            const imageBuffer = await imageResponse.arrayBuffer();
+            res.set({
+              'Content-Type': `image/${format === 'jpg' ? 'jpeg' : format}`,
+              'Cache-Control': 'public, max-age=31536000', // 1 year cache
+              'X-Cache-Status': 'HIT'
+            });
+            return res.send(Buffer.from(imageBuffer));
+          }
+        } catch (fetchError) {
+          console.log('Failed to fetch cached image, generating new one:', fetchError.message);
+        }
+      } else {
+        console.log(`💾 Cache MISS: Generating new image for prompt "${prompt}" at ${dimensions}`);
+      }
+    } catch (cacheError) {
+      console.log('Cache lookup failed, proceeding with generation:', cacheError.message);
     }
 
     // Check API key if provided
@@ -1858,6 +1900,35 @@ app.get('/:width(\\d+)x:height(\\d+).mp4', async (req, res) => {
       return res.status(400).json({ error: 'Invalid dimensions. Must be between 1x1 and 2048x2048' });
     }
 
+    // Use the same prompt format that will be used for generation and database storage
+    const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    const dimensions = `${w}x${h}`;
+
+    // Check for existing video/image with same prompt and dimensions (cache check)
+    // For videos, we first check if there's an existing image we can reuse for video generation
+    try {
+      const { data: existingImage, error: cacheError } = await supabase
+        .from('image_generations')
+        .select('public_url')
+        .eq('prompt', prompt)
+        .eq('dimensions', dimensions)
+        .eq('success', true)
+        .is('public_url', 'not.null')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!cacheError && existingImage && existingImage.public_url) {
+        console.log(`🎯 Image Cache HIT for video: Using existing image for prompt "${prompt}" at ${dimensions}`);
+        // We'll use this cached image URL later in the video generation process
+        req.cachedImageUrl = existingImage.public_url;
+      } else {
+        console.log(`💾 Image Cache MISS for video: Will generate new image for prompt "${prompt}" at ${dimensions}`);
+      }
+    } catch (cacheError) {
+      console.log('Image cache lookup failed for video, proceeding with generation:', cacheError.message);
+    }
+
     // Check API key if provided
     let userId = null;
     let apiKeyRecord = null;
@@ -1932,9 +2003,14 @@ app.get('/:width(\\d+)x:height(\\d+).mp4', async (req, res) => {
         }
       }
 
-      // Generate the image first (only if not in storage)
-      console.log(`Generating base image for video ${w}x${h}, prompt: "${prompt}"`);
-      imageUrl = await generateImageWithFAL(prompt, w, h);
+      // Generate the image first (only if not in storage and not cached)
+      if (req.cachedImageUrl) {
+        console.log(`🎯 Using cached image for video generation: "${prompt}" at ${w}x${h}`);
+        imageUrl = req.cachedImageUrl;
+      } else {
+        console.log(`Generating base image for video ${w}x${h}, prompt: "${prompt}"`);
+        imageUrl = await generateImageWithFAL(prompt, w, h);
+      }
       imageCache.set(cacheKey, imageUrl);
 
       // Log generation
