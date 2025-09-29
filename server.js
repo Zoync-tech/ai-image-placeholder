@@ -347,15 +347,14 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const { data, error } = await supabaseClient.auth.signUp({
+    // Create user with admin API to avoid automatic confirmation emails
+    const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName
-        },
-        emailRedirectTo: undefined // Disable Supabase email confirmation
-      }
+      user_metadata: {
+        full_name: fullName
+      },
+      email_confirm: false // Don't confirm email yet - we'll handle this manually
     });
 
     if (error) {
