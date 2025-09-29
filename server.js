@@ -960,16 +960,18 @@ app.get('/api/subscription/status', async (req, res) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
-    if (error || !user) {
+    const tokenValidation = await validateToken(token);
+    if (!tokenValidation) {
       return res.status(401).json({ error: 'Invalid token' });
     }
+
+    const { user, userId } = tokenValidation;
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profileError) {
@@ -980,7 +982,7 @@ app.get('/api/subscription/status', async (req, res) => {
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('status', 'active')
       .single();
 
@@ -1006,18 +1008,19 @@ app.post('/api/subscription/create-checkout', async (req, res) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
-    if (error || !user) {
+    const tokenValidation = await validateToken(token);
+    if (!tokenValidation) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    const { user, userId } = tokenValidation;
     const { planType, successUrl, cancelUrl } = req.body;
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profileError) {
@@ -1025,14 +1028,14 @@ app.post('/api/subscription/create-checkout', async (req, res) => {
     }
 
     // Create or get Stripe customer
-    let customer = await StripeService.createOrGetCustomer(user.email, user.id);
+    let customer = await StripeService.createOrGetCustomer(user.email, userId);
 
     // Update profile with Stripe customer ID if not set
     if (!profile.stripe_customer_id) {
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: customer.id })
-        .eq('id', user.id);
+        .eq('id', userId);
     }
 
     // Get price ID based on plan type
@@ -1073,18 +1076,19 @@ app.post('/api/subscription/create-refill-checkout', async (req, res) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
-    if (error || !user) {
+    const tokenValidation = await validateToken(token);
+    if (!tokenValidation) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    const { user, userId } = tokenValidation;
     const { successUrl, cancelUrl } = req.body;
 
     // Check if user has active subscription
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('status', 'active')
       .single();
 
@@ -1329,10 +1333,12 @@ app.get('/api/subscription/session-details', async (req, res) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
-    if (error || !user) {
+    const tokenValidation = await validateToken(token);
+    if (!tokenValidation) {
       return res.status(401).json({ error: 'Invalid token' });
     }
+
+    const { user, userId } = tokenValidation;
 
     const { session_id } = req.query;
     if (!session_id) {
