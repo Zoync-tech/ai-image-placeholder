@@ -406,6 +406,15 @@
 
         // Load API keys for demo functionality
         async function loadApiKeys() {
+            // Check if API key is already stored locally
+            const storedApiKey = localStorage.getItem('userApiKey');
+            if (storedApiKey) {
+                userApiKey = storedApiKey;
+                console.log('Using stored API key:', userApiKey);
+                updateLivePreview();
+                return;
+            }
+
             const token = localStorage.getItem('userToken');
             if (!token) return;
 
@@ -421,9 +430,14 @@
                     const apiKeys = data.api_keys || [];
                     if (apiKeys.length > 0) {
                         userApiKey = apiKeys[0].api_key || apiKeys[0].key;
+                        // Store API key locally for future use
+                        localStorage.setItem('userApiKey', userApiKey);
                         // Update live preview with real API key
                         updateLivePreview();
                     }
+                } else if (response.status === 401) {
+                    // Token expired, but don't redirect immediately - user might just be inactive
+                    console.log('Token may be expired, but keeping current session');
                 }
             } catch (error) {
                 console.error('Error loading API keys:', error);

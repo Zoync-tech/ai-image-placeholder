@@ -226,11 +226,20 @@
                     localStorage.setItem('userEmail', userEmail);
                     localStorage.removeItem('pendingVerificationEmail');
 
+                    // Store API key if provided
+                    if (data.api_key) {
+                        localStorage.setItem('userApiKey', data.api_key);
+                        console.log('API key auto-generated and stored:', data.api_key);
+                    }
+
                     showSuccess('Email verified successfully! Redirecting to AI Image Generator...');
 
+                    // Use the redirect URL from server response if provided
+                    const redirectUrl = data.redirect_to || 'https://www.vrccim.com/ai-image-generator.html';
+
                     setTimeout(() => {
-                        window.location.href = 'https://www.vrccim.com/ai-image-generator.html';
-                    }, 2000);
+                        window.location.href = redirectUrl;
+                    }, 1500); // Shorter delay for better UX
                 } else {
                     const error = await response.json();
                     showError(error.error || 'Verification failed');

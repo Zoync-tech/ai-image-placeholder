@@ -15,8 +15,21 @@ if (!isSupabaseConfigured) {
 }
 
 // Create Supabase clients (with fallback for missing config)
-const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseServiceKey) : null;
-const supabaseClient = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+}) : null;
+
+const supabaseClient = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+}) : null;
 
 // Utility functions for database operations
 class SupabaseService {

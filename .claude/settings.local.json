@@ -8,7 +8,10 @@
       "Bash(curl:*)",
       "Bash(fly secrets:*)",
       "Bash(node server.js)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(fly scale memory:*)",
+      "Bash(fly status:*)",
+      "Bash(fly machine list:*)"
     ],
     "deny": [],
     "ask": []
