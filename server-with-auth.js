@@ -96,7 +96,8 @@ try {
         .insert({
           id: user.id,
           email: user.email,
-          full_name: user.user_metadata?.full_name || null
+          full_name: user.user_metadata?.full_name || null,
+          credits: 5 // Default credits for new users
         })
         .select()
         .single();
@@ -127,6 +128,51 @@ try {
       } catch (error) {
         console.error('Error getting/creating user profile:', error);
         throw error;
+      }
+    }
+    
+    // Deduct credits from user
+    static async deductCredits(userId, amount = 1) {
+      if (!supabase) throw new Error('Supabase not available');
+      
+      try {
+        const { data, error } = await supabase.rpc('use_credits', {
+          p_user_id: userId,
+          p_amount: amount
+        });
+        
+        if (error) {
+          console.error('Error deducting credits:', error);
+          throw new Error(`Failed to deduct credits: ${error.message}`);
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Error in deductCredits:', error);
+        throw error;
+      }
+    }
+    
+    // Get user credits
+    static async getUserCredits(userId) {
+      if (!supabase) return 0;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('credits')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error('Error getting user credits:', error);
+          return 0;
+        }
+        
+        return data?.credits || 0;
+      } catch (error) {
+        console.error('Error in getUserCredits:', error);
+        return 0;
       }
     }
     
@@ -975,9 +1021,12 @@ app.post('/api/create-key', async (req, res) => {
     const { name } = req.body;
     const apiKey = await SupabaseService.generateApiKey(user.id, name || 'Default API Key');
     
+    // Get actual user credits
+    const userCredits = await SupabaseService.getUserCredits(user.id);
+    
     res.json({ 
       api_key: apiKey.api_key,
-      credits: 100 // Default credits for new users
+      credits: userCredits
     });
   } catch (error) {
     console.error('Error creating API key:', error);
@@ -1128,6 +1177,17 @@ async function startGenerationProcess(statusId, prompt, dimensions, format, user
     
     console.log(`🎨 Starting image generation for prompt: "${prompt}"`);
     const startTime = Date.now();
+    
+    // Deduct credits before generation (only for authenticated users)
+    if (userId) {
+      try {
+        const remainingCredits = await SupabaseService.deductCredits(userId, 1);
+        console.log(`💰 Credits deducted. Remaining credits: ${remainingCredits}`);
+      } catch (creditError) {
+        console.error('Error deducting credits:', creditError);
+        // Continue with generation even if credit deduction fails
+      }
+    }
     
     // Generate image using FAL AI Seedream v4
     const [width, height] = dimensions.split('x').map(Number);
