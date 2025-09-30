@@ -229,37 +229,109 @@ try {
       return data;
     }
     
-    // Log image generation
-    static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
-      if (!supabase) return;
-      
-      const { error } = await supabase
-        .from('image_generations')
-        .insert({
-          user_id: userId,
-          api_key_id: apiKeyId,
-          prompt: prompt,
-          dimensions: dimensions,
-          credits_used: 1,
-          success: success,
-          error_message: errorMessage
-        });
-      
-      if (error) {
-        console.error('Error logging image generation:', error);
-      }
-      
-      // Update API key usage stats
-      if (success && apiKeyId) {
-        await supabase
-          .from('api_keys')
-          .update({ 
-            total_requests: supabase.raw('total_requests + 1'),
-            last_used_at: new Date().toISOString()
-          })
-          .eq('id', apiKeyId);
-      }
-    }
+     // Log image generation
+     static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
+       if (!supabase) return;
+       
+       const { error } = await supabase
+         .from('image_generations')
+         .insert({
+           user_id: userId,
+           api_key_id: apiKeyId,
+           prompt: prompt,
+           dimensions: dimensions,
+           credits_used: 1,
+           success: success,
+           error_message: errorMessage
+         });
+       
+       if (error) {
+         console.error('Error logging image generation:', error);
+       }
+       
+       // Update API key usage stats
+       if (success && apiKeyId) {
+         await supabase
+           .from('api_keys')
+           .update({ 
+             total_requests: supabase.raw('total_requests + 1'),
+             last_used_at: new Date().toISOString()
+           })
+           .eq('id', apiKeyId);
+       }
+     }
+     
+     // Check if image/video is cached
+     static async getCachedImage(prompt, dimensions, format, additionalSettings = '') {
+       if (!supabase) return null;
+       
+       try {
+         const { data, error } = await supabase
+           .rpc('get_cached_image', {
+             prompt_text: prompt,
+             dimensions_text: dimensions,
+             format_text: format,
+             additional_settings: additionalSettings
+           });
+         
+         if (error) {
+           console.error('Error getting cached image:', error);
+           return null;
+         }
+         
+         if (data && data.length > 0) {
+           // Update access count
+           await this.updateCacheAccess(data[0].cache_id);
+           return data[0].cached_url;
+         }
+         
+         return null;
+       } catch (error) {
+         console.error('Error in getCachedImage:', error);
+         return null;
+       }
+     }
+     
+     // Store generated image/video in cache
+     static async storeCachedImage(prompt, dimensions, format, generatedUrl, fileSize = null, generationTimeMs = null, userId = null) {
+       if (!supabase) return null;
+       
+       try {
+         const { data, error } = await supabase
+           .rpc('store_cached_image', {
+             prompt_text: prompt,
+             dimensions_text: dimensions,
+             format_text: format,
+             generated_url_text: generatedUrl,
+             file_size_bytes: fileSize,
+             generation_time_ms: generationTimeMs,
+             user_id_param: userId
+           });
+         
+         if (error) {
+           console.error('Error storing cached image:', error);
+           return null;
+         }
+         
+         return data;
+       } catch (error) {
+         console.error('Error in storeCachedImage:', error);
+         return null;
+       }
+     }
+     
+     // Update cache access count
+     static async updateCacheAccess(cacheId) {
+       if (!supabase) return;
+       
+       try {
+         await supabase.rpc('update_cache_access', {
+           cache_id_param: cacheId
+         });
+       } catch (error) {
+         console.error('Error updating cache access:', error);
+       }
+     }
   }
   
   SupabaseService = SimplifiedSupabaseService;
@@ -677,7 +749,7 @@ app.post('/api/create-key', async (req, res) => {
   }
 });
 
-// Image generation endpoint (placeholder - returns a simple placeholder image)
+// Image generation endpoint with caching system
 app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, res) => {
   try {
     const { width, height, format } = req.params;
@@ -693,8 +765,9 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
 
     // Check API key if provided
     let userId = null;
+    let apiKeyData = null;
     if (api_key) {
-      const apiKeyData = await SupabaseService.validateApiKey(api_key);
+      apiKeyData = await SupabaseService.validateApiKey(api_key);
       if (!apiKeyData) {
         return res.status(401).json({ error: 'Invalid API key' });
       }
@@ -702,19 +775,71 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
     }
 
     const prompt = text || `A beautiful ${w}x${h} placeholder image`;
+    const dimensions = `${w}x${h}`;
+    
+    // 🚀 CACHE CHECK: First check if this exact prompt already exists
+    console.log(`🔍 Checking cache for prompt: "${prompt}" (${dimensions}.${format})`);
+    const cachedUrl = await SupabaseService.getCachedImage(prompt, dimensions, format);
+    
+    if (cachedUrl) {
+      console.log(`✅ Cache HIT! Returning cached image for prompt: "${prompt}"`);
+      console.log(`💰 SAVED: No API call needed - cost avoided!`);
+      
+      // Log cache hit (no credits used)
+      if (userId) {
+        try {
+          await SupabaseService.logImageGeneration(
+            userId, 
+            apiKeyData?.id,
+            prompt, 
+            dimensions, 
+            true,
+            'Cache hit - no API call'
+          );
+        } catch (logError) {
+          console.error('Error logging cache hit:', logError);
+        }
+      }
+      
+      return res.redirect(cachedUrl);
+    }
+    
+    console.log(`❌ Cache MISS! Need to generate new image for prompt: "${prompt}"`);
+    
+    // Generate new image (this is where you'd call FAL AI or your image generation service)
+    const startTime = Date.now();
     
     // For now, return a placeholder image URL
     // In production, you would integrate with FAL AI or another image generation service
-    const placeholderUrl = `https://via.placeholder.com/${w}x${h}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
+    const generatedUrl = `https://via.placeholder.com/${w}x${h}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
+    
+    const generationTime = Date.now() - startTime;
+    
+    // 🚀 CACHE STORE: Save the generated image to cache for future requests
+    try {
+      await SupabaseService.storeCachedImage(
+        prompt, 
+        dimensions, 
+        format, 
+        generatedUrl, 
+        null, // file size (would be available from FAL AI response)
+        generationTime, 
+        userId
+      );
+      console.log(`💾 Cached new image for prompt: "${prompt}"`);
+    } catch (cacheError) {
+      console.error('Error storing in cache:', cacheError);
+      // Don't fail the request if caching fails
+    }
     
     // Log the generation if user is authenticated
     if (userId) {
       try {
         await SupabaseService.logImageGeneration(
           userId, 
-          api_key ? (await SupabaseService.validateApiKey(api_key))?.id : null,
+          apiKeyData?.id,
           prompt, 
-          `${w}x${h}`, 
+          dimensions, 
           true
         );
       } catch (logError) {
@@ -722,7 +847,7 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       }
     }
 
-    res.redirect(placeholderUrl);
+    res.redirect(generatedUrl);
   } catch (error) {
     console.error('Image generation error:', error);
     res.status(500).json({ error: 'Image generation failed' });
