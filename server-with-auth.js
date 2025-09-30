@@ -467,11 +467,8 @@ async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
 
     if (result.data && result.data.images && result.data.images.length > 0) {
       const falUrl = result.data.images[0].url;
-      // Extract image ID from FAL URL and create proxy URL
-      const imageId = falUrl.split('/').pop();
-      const proxyUrl = `/proxy/${imageId}`;
-      console.log(`🔄 Converting FAL URL to proxy URL: ${falUrl} → ${proxyUrl}`);
-      return proxyUrl;
+      console.log(`✅ FAL AI generated image URL: ${falUrl}`);
+      return falUrl;
     } else {
       throw new Error('No image URL returned from FAL AI');
     }
@@ -481,24 +478,50 @@ async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
   }
 }
 
-// Helper function to serve image directly
+// Helper function to serve image directly at the same URL
 async function serveImage(res, imageUrl) {
   try {
-    console.log(`🖼️ Serving image: ${imageUrl}`);
+    console.log(`🖼️ Serving image directly: ${imageUrl}`);
     
-    // If it's already a proxy URL, redirect to it
+    let actualImageUrl = imageUrl;
+    
+    // If it's a proxy URL, extract the original FAL URL
     if (imageUrl.startsWith('/proxy/')) {
-      return res.redirect(imageUrl);
-    }
-    
-    // If it's a FAL.media URL, proxy it
-    if (imageUrl.includes('v3.fal.media')) {
       const imageId = imageUrl.split('/').pop();
-      return res.redirect(`/proxy/${imageId}`);
+      actualImageUrl = `https://v3.fal.media/files/${imageId}`;
     }
     
-    // For other URLs, redirect directly
-    return res.redirect(imageUrl);
+    // If it's already a FAL.media URL, use it directly
+    if (imageUrl.includes('v3.fal.media')) {
+      actualImageUrl = imageUrl;
+    }
+    
+    console.log(`📥 Fetching image from: ${actualImageUrl}`);
+    
+    // Fetch the image from FAL.media
+    const response = await fetch(actualImageUrl);
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Get the image data
+    const imageBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/png';
+    
+    console.log(`✅ Serving image directly (${imageBuffer.byteLength} bytes, ${contentType})`);
+    
+    // Set appropriate headers
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*',
+      'Content-Length': imageBuffer.byteLength
+    });
+    
+    // Send the image data directly
+    res.send(Buffer.from(imageBuffer));
     
   } catch (error) {
     console.error('Error serving image:', error);
