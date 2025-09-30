@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const imageQueue = require('./image-queue');
+const { fal } = require('@fal-ai/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -423,6 +424,52 @@ try {
   SupabaseService = SimplifiedSupabaseService;
   
   console.log('✅ Simplified SupabaseService created');
+}
+
+// FAL AI Configuration
+const FAL_KEY = process.env.FAL_KEY || '789ca5d1-1581-44e1-89c5-c2a91f6e26f3:1e7597e245d48ad2f5a521334a140e32';
+
+// Configure FAL AI client
+fal.config({
+  credentials: FAL_KEY
+});
+
+// Generate image using FAL AI Seedream v4
+async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
+  try {
+    console.log(`🎨 Generating image with Seedream v4: "${prompt}"`);
+
+    const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/text-to-image", {
+      input: {
+        prompt: prompt,
+        image_size: {
+          width: width,
+          height: height
+        },
+        num_images: 1,
+        max_images: 1,
+        enable_safety_checker: false, // Disable safety checker for NSFW content
+        sync_mode: false // Get URLs instead of data URIs for better performance
+      },
+      logs: true,
+      onQueueUpdate: (update) => {
+        if (update.status === "IN_PROGRESS") {
+          console.log('📊 Seedream v4 Status:', update.logs?.map((log) => log.message).join(', '));
+        }
+      }
+    });
+
+    console.log('✅ FAL AI Result:', result.data);
+
+    if (result.data && result.data.images && result.data.images.length > 0) {
+      return result.data.images[0].url;
+    } else {
+      throw new Error('No image URL returned from FAL AI');
+    }
+  } catch (error) {
+    console.error('❌ FAL AI Error:', error.message);
+    throw new Error('Failed to generate image with FAL AI');
+  }
 }
 
 // Health check
@@ -979,13 +1026,9 @@ async function startGenerationProcess(statusId, prompt, dimensions, format, user
     console.log(`🎨 Starting image generation for prompt: "${prompt}"`);
     const startTime = Date.now();
     
-    // Generate new image (this is where you'd call FAL AI or your image generation service)
-    // For now, simulate generation time with a delay
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate 2 second generation
-    
-    // For now, return a placeholder image URL
-    // In production, you would integrate with FAL AI or another image generation service
-    const generatedUrl = `https://via.placeholder.com/${dimensions.replace('x', 'x')}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
+    // Generate image using FAL AI Seedream v4
+    const [width, height] = dimensions.split('x').map(Number);
+    const generatedUrl = await generateImageWithFAL(prompt, width, height);
     
     const generationTime = Date.now() - startTime;
     
@@ -1018,15 +1061,8 @@ async function startGenerationProcess(statusId, prompt, dimensions, format, user
   } catch (error) {
     console.error('Error in generation process:', error);
     
-    // Update status to 'failed'
-    await SupabaseService.updateGenerationStatus(
-      statusId, 
-      'failed', 
-      null, 
-      error.message, 
-      null, 
-      null
-    );
+    // Update status to 'failed' (JavaScript queue)
+    imageQueue.updateGenerationStatus(statusId, 'failed');
     
     return res.status(500).json({ error: 'Image generation failed' });
   }
