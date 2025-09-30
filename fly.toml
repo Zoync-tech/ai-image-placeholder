@@ -1,5 +1,5 @@
 # Fly.io configuration for AI Image Generator
-app = "ai-image-placeholder"
+app = "frosty-smoke-2336"
 primary_region = "iad"
 
 [build]

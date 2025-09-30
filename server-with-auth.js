@@ -63,7 +63,8 @@ try {
   console.warn('Creating simplified SupabaseService...');
   
   // Create a simplified SupabaseService directly
-  const { v4: uuidv4 } = require('uuid');
+  // Use crypto.randomUUID() instead of uuid package to avoid ES module issues
+  const crypto = require('crypto');
   
   class SimplifiedSupabaseService {
     // Get user profile
@@ -143,7 +144,7 @@ try {
         throw new Error('User profile not found. Please ensure profile is created first.');
       }
       
-      const apiKey = `ai_${uuidv4().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
+      const apiKey = `ai_${crypto.randomUUID().replace(/-/g, '')}_${Math.random().toString(36).substring(2, 10)}`;
       
       const { data, error } = await supabase
         .from('api_keys')
