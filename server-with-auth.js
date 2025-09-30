@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const imageQueue = require('./image-queue');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -864,8 +865,8 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
     
     console.log(`🎯 Request for prompt: "${prompt}" (${dimensions}.${format})`);
     
-    // 🚀 STEP 1: Check cache first (fastest response)
-    const cachedUrl = await SupabaseService.getCachedImage(prompt, dimensions, format);
+    // 🚀 STEP 1: Check cache first (fastest response) - JavaScript queue
+    const cachedUrl = imageQueue.getCachedImage(prompt, dimensions, format);
     if (cachedUrl) {
       console.log(`✅ Cache HIT! Returning cached image for prompt: "${prompt}"`);
       console.log(`💰 SAVED: No API call needed - cost avoided!`);
@@ -889,8 +890,8 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       return res.redirect(cachedUrl);
     }
     
-    // 🚀 STEP 2: Check generation status (queuing system)
-    const generationStatus = await SupabaseService.getOrCreateGenerationStatus(prompt, dimensions, format, userId);
+    // 🚀 STEP 2: Check generation status (queuing system) - JavaScript queue
+    const generationStatus = imageQueue.getOrCreateGenerationStatus(prompt, dimensions, format);
     
     if (!generationStatus) {
       console.error('Failed to get/create generation status');
@@ -905,20 +906,8 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
         console.log(`✅ Generation COMPLETED! Returning generated image for prompt: "${prompt}"`);
         console.log(`💰 SAVED: ${generationStatus.totalRequests - 1} duplicate API calls avoided!`);
         
-        // Store in cache for future requests
-        try {
-          await SupabaseService.storeCachedImage(
-            prompt, 
-            dimensions, 
-            format, 
-            generationStatus.generatedUrl, 
-            null, 
-            null, 
-            userId
-          );
-        } catch (cacheError) {
-          console.error('Error storing completed generation in cache:', cacheError);
-        }
+        // Store in cache for future requests (JavaScript queue)
+        imageQueue.storeCachedImage(prompt, dimensions, format, generationStatus.generatedUrl);
         
         return res.redirect(generationStatus.generatedUrl);
         
@@ -954,7 +943,7 @@ async function waitForGenerationCompletion(statusId, res) {
   let waitTime = 0;
   
   while (waitTime < maxWaitTime) {
-    const status = await SupabaseService.getGenerationStatusById(statusId);
+    const status = imageQueue.getGenerationStatusById(statusId);
     
     if (!status) {
       console.error('Failed to get generation status');
@@ -984,8 +973,8 @@ async function waitForGenerationCompletion(statusId, res) {
 // Function to start generation process
 async function startGenerationProcess(statusId, prompt, dimensions, format, userId, apiKeyData, res) {
   try {
-    // Update status to 'generating'
-    await SupabaseService.updateGenerationStatus(statusId, 'generating');
+    // Update status to 'generating' (JavaScript queue)
+    imageQueue.updateGenerationStatus(statusId, 'generating');
     
     console.log(`🎨 Starting image generation for prompt: "${prompt}"`);
     const startTime = Date.now();
@@ -1000,33 +989,14 @@ async function startGenerationProcess(statusId, prompt, dimensions, format, user
     
     const generationTime = Date.now() - startTime;
     
-    // Update status to 'completed'
-    await SupabaseService.updateGenerationStatus(
-      statusId, 
-      'completed', 
-      generatedUrl, 
-      null, 
-      generationTime, 
-      null
-    );
+    // Update status to 'completed' (JavaScript queue)
+    imageQueue.updateGenerationStatus(statusId, 'completed', generatedUrl);
     
     console.log(`✅ Generation completed in ${generationTime}ms for prompt: "${prompt}"`);
     
-    // Store in cache for future requests
-    try {
-      await SupabaseService.storeCachedImage(
-        prompt, 
-        dimensions, 
-        format, 
-        generatedUrl, 
-        null, 
-        generationTime, 
-        userId
-      );
-      console.log(`💾 Cached generated image for prompt: "${prompt}"`);
-    } catch (cacheError) {
-      console.error('Error storing in cache:', cacheError);
-    }
+    // Store in cache for future requests (JavaScript queue)
+    imageQueue.storeCachedImage(prompt, dimensions, format, generatedUrl);
+    console.log(`💾 Cached generated image for prompt: "${prompt}"`);
     
     // Log the generation if user is authenticated
     if (userId) {
