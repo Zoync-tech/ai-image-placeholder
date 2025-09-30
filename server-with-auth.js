@@ -310,9 +310,9 @@ try {
          
          if (error) {
            console.error('Error storing cached image:', error);
-           return null;
-         }
-         
+    return null;
+  }
+  
          return data;
        } catch (error) {
          console.error('Error in storeCachedImage:', error);
@@ -330,6 +330,90 @@ try {
          });
        } catch (error) {
          console.error('Error updating cache access:', error);
+       }
+     }
+     
+     // Get or create generation status (for request queuing)
+     static async getOrCreateGenerationStatus(prompt, dimensions, format, userId = null) {
+       if (!supabase) return null;
+       
+       try {
+         const { data, error } = await supabase
+           .rpc('get_or_create_generation_status', {
+             prompt_text: prompt,
+             dimensions_text: dimensions,
+             format_text: format,
+             user_id_param: userId
+           });
+         
+         if (error) {
+           console.error('Error getting/creating generation status:', error);
+    return null;
+  }
+  
+         if (data && data.length > 0) {
+           return {
+             id: data[0].status_id,
+             status: data[0].current_status,
+             generatedUrl: data[0].generated_url,
+             totalRequests: data[0].total_requests
+           };
+         }
+         
+         return null;
+       } catch (error) {
+         console.error('Error in getOrCreateGenerationStatus:', error);
+         return null;
+       }
+     }
+     
+     // Update generation status
+     static async updateGenerationStatus(statusId, newStatus, generatedUrl = null, errorMessage = null, generationTimeMs = null, fileSize = null) {
+       if (!supabase) return;
+       
+       try {
+         await supabase.rpc('update_generation_status', {
+           status_id_param: statusId,
+           new_status: newStatus,
+           generated_url_param: generatedUrl,
+           error_message_param: errorMessage,
+           generation_time_ms_param: generationTimeMs,
+           file_size_param: fileSize
+         });
+       } catch (error) {
+         console.error('Error updating generation status:', error);
+       }
+     }
+     
+     // Get generation status by ID
+     static async getGenerationStatusById(statusId) {
+       if (!supabase) return null;
+       
+       try {
+         const { data, error } = await supabase
+           .rpc('get_generation_status_by_id', {
+             status_id_param: statusId
+           });
+         
+         if (error) {
+           console.error('Error getting generation status:', error);
+           return null;
+         }
+         
+         if (data && data.length > 0) {
+           return {
+             status: data[0].status,
+             generatedUrl: data[0].generated_url,
+             errorMessage: data[0].error_message,
+             totalRequests: data[0].total_requests,
+             createdAt: data[0].created_at
+           };
+         }
+         
+         return null;
+       } catch (error) {
+         console.error('Error in getGenerationStatusById:', error);
+         return null;
        }
      }
   }
@@ -471,8 +555,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     // Get or create user profile
     const profile = await SupabaseService.getOrCreateUserProfile(data.user);
-    
-    res.json({
+  
+  res.json({
       token: data.session.access_token,
       user: profile
     });
@@ -508,8 +592,8 @@ app.post('/api/auth/signup', async (req, res) => {
       console.error('Signup error:', error);
       return res.status(400).json({ error: error.message });
     }
-
-    res.json({
+  
+  res.json({
       success: true,
       user: data.user,
       message: 'Please check your email to verify your account'
@@ -641,7 +725,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
       success: true,
       message: 'Password updated successfully'
     });
-  } catch (error) {
+      } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
@@ -749,7 +833,7 @@ app.post('/api/create-key', async (req, res) => {
   }
 });
 
-// Image generation endpoint with caching system
+// Image generation endpoint with intelligent queuing system
 app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, res) => {
   try {
     const { width, height, format } = req.params;
@@ -777,10 +861,10 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
     const prompt = text || `A beautiful ${w}x${h} placeholder image`;
     const dimensions = `${w}x${h}`;
     
-    // 🚀 CACHE CHECK: First check if this exact prompt already exists
-    console.log(`🔍 Checking cache for prompt: "${prompt}" (${dimensions}.${format})`);
-    const cachedUrl = await SupabaseService.getCachedImage(prompt, dimensions, format);
+    console.log(`🎯 Request for prompt: "${prompt}" (${dimensions}.${format})`);
     
+    // 🚀 STEP 1: Check cache first (fastest response)
+    const cachedUrl = await SupabaseService.getCachedImage(prompt, dimensions, format);
     if (cachedUrl) {
       console.log(`✅ Cache HIT! Returning cached image for prompt: "${prompt}"`);
       console.log(`💰 SAVED: No API call needed - cost avoided!`);
@@ -804,32 +888,143 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
       return res.redirect(cachedUrl);
     }
     
-    console.log(`❌ Cache MISS! Need to generate new image for prompt: "${prompt}"`);
+    // 🚀 STEP 2: Check generation status (queuing system)
+    const generationStatus = await SupabaseService.getOrCreateGenerationStatus(prompt, dimensions, format, userId);
+    
+    if (!generationStatus) {
+      console.error('Failed to get/create generation status');
+      return res.status(500).json({ error: 'Failed to initialize generation' });
+    }
+    
+    console.log(`📊 Generation Status: ${generationStatus.status} (${generationStatus.totalRequests} total requests)`);
+    
+    // Handle different generation statuses
+    switch (generationStatus.status) {
+      case 'completed':
+        console.log(`✅ Generation COMPLETED! Returning generated image for prompt: "${prompt}"`);
+        console.log(`💰 SAVED: ${generationStatus.totalRequests - 1} duplicate API calls avoided!`);
+        
+        // Store in cache for future requests
+        try {
+          await SupabaseService.storeCachedImage(
+            prompt, 
+            dimensions, 
+            format, 
+            generationStatus.generatedUrl, 
+            null, 
+            null, 
+            userId
+          );
+        } catch (cacheError) {
+          console.error('Error storing completed generation in cache:', cacheError);
+        }
+        
+        return res.redirect(generationStatus.generatedUrl);
+        
+      case 'failed':
+        console.log(`❌ Generation FAILED for prompt: "${prompt}"`);
+        return res.status(500).json({ error: 'Image generation failed' });
+        
+      case 'generating':
+        console.log(`⏳ Generation IN PROGRESS for prompt: "${prompt}" - waiting...`);
+        // Wait and poll for completion
+        return await waitForGenerationCompletion(generationStatus.id, res);
+        
+      case 'pending':
+        console.log(`🚀 Starting NEW generation for prompt: "${prompt}" (${generationStatus.totalRequests} requests queued)`);
+        // Start generation process
+        return await startGenerationProcess(generationStatus.id, prompt, dimensions, format, userId, apiKeyData, res);
+        
+      default:
+        console.error(`Unknown generation status: ${generationStatus.status}`);
+        return res.status(500).json({ error: 'Unknown generation status' });
+    }
+    
+  } catch (error) {
+    console.error('Image generation error:', error);
+    res.status(500).json({ error: 'Image generation failed' });
+  }
+});
+
+// Function to wait for generation completion
+async function waitForGenerationCompletion(statusId, res) {
+  const maxWaitTime = 30000; // 30 seconds max wait
+  const pollInterval = 1000; // Poll every 1 second
+  let waitTime = 0;
+  
+  while (waitTime < maxWaitTime) {
+    const status = await SupabaseService.getGenerationStatusById(statusId);
+    
+    if (!status) {
+      console.error('Failed to get generation status');
+      return res.status(500).json({ error: 'Failed to check generation status' });
+    }
+    
+    if (status.status === 'completed') {
+      console.log(`✅ Generation completed after ${waitTime}ms wait`);
+      return res.redirect(status.generatedUrl);
+    }
+    
+    if (status.status === 'failed') {
+      console.log(`❌ Generation failed after ${waitTime}ms wait`);
+      return res.status(500).json({ error: status.errorMessage || 'Image generation failed' });
+    }
+    
+    // Still generating, wait and poll again
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    waitTime += pollInterval;
+  }
+  
+  // Timeout
+  console.log(`⏰ Generation timeout after ${maxWaitTime}ms`);
+  return res.status(504).json({ error: 'Generation timeout - please try again' });
+}
+
+// Function to start generation process
+async function startGenerationProcess(statusId, prompt, dimensions, format, userId, apiKeyData, res) {
+  try {
+    // Update status to 'generating'
+    await SupabaseService.updateGenerationStatus(statusId, 'generating');
+    
+    console.log(`🎨 Starting image generation for prompt: "${prompt}"`);
+    const startTime = Date.now();
     
     // Generate new image (this is where you'd call FAL AI or your image generation service)
-    const startTime = Date.now();
+    // For now, simulate generation time with a delay
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate 2 second generation
     
     // For now, return a placeholder image URL
     // In production, you would integrate with FAL AI or another image generation service
-    const generatedUrl = `https://via.placeholder.com/${w}x${h}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
+    const generatedUrl = `https://via.placeholder.com/${dimensions.replace('x', 'x')}/6366f1/ffffff?text=${encodeURIComponent(prompt)}`;
     
     const generationTime = Date.now() - startTime;
     
-    // 🚀 CACHE STORE: Save the generated image to cache for future requests
+    // Update status to 'completed'
+    await SupabaseService.updateGenerationStatus(
+      statusId, 
+      'completed', 
+      generatedUrl, 
+      null, 
+      generationTime, 
+      null
+    );
+    
+    console.log(`✅ Generation completed in ${generationTime}ms for prompt: "${prompt}"`);
+    
+    // Store in cache for future requests
     try {
       await SupabaseService.storeCachedImage(
         prompt, 
         dimensions, 
         format, 
         generatedUrl, 
-        null, // file size (would be available from FAL AI response)
+        null, 
         generationTime, 
         userId
       );
-      console.log(`💾 Cached new image for prompt: "${prompt}"`);
+      console.log(`💾 Cached generated image for prompt: "${prompt}"`);
     } catch (cacheError) {
       console.error('Error storing in cache:', cacheError);
-      // Don't fail the request if caching fails
     }
     
     // Log the generation if user is authenticated
@@ -846,13 +1041,25 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
         console.error('Error logging generation:', logError);
       }
     }
-
-    res.redirect(generatedUrl);
+    
+    return res.redirect(generatedUrl);
+    
   } catch (error) {
-    console.error('Image generation error:', error);
-    res.status(500).json({ error: 'Image generation failed' });
+    console.error('Error in generation process:', error);
+    
+    // Update status to 'failed'
+    await SupabaseService.updateGenerationStatus(
+      statusId, 
+      'failed', 
+      null, 
+      error.message, 
+      null, 
+      null
+    );
+    
+    return res.status(500).json({ error: 'Image generation failed' });
   }
-});
+}
 
 // Error handling
 app.use((err, req, res, next) => {

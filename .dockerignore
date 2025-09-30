@@ -1,36 +1,73 @@
+# Dependencies
 node_modules
-npm-debug.log
-.git
-.gitignore
-README.md
+npm-debug.log*
+
+# Environment files
 .env
-.nyc_output
-coverage
-.nyc_output
-.coverage
-.coverage/
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Development files
+test-*.js
+server-minimal*.js
+server-fallback.js
+
+# Build artifacts
+dist
+build
+
+# OS generated files
 .DS_Store
-*.log
-logs
-*.pid
-*.seed
-*.pid.lock
-.npm
-.eslintcache
-.node_repl_history
-*.tgz
-.yarn-integrity
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
 .vscode
 .idea
 *.swp
 *.swo
-*~
 
+# Logs
+logs
+*.log
 
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
+# Coverage directory used by tools like istanbul
+coverage
 
+# nyc test coverage
+.nyc_output
 
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
