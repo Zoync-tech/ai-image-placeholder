@@ -232,37 +232,41 @@ try {
       return data;
     }
     
-     // Log image generation
-     static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
-       if (!supabase) return;
-       
-       const { error } = await supabase
-         .from('image_generations')
-         .insert({
-           user_id: userId,
-           api_key_id: apiKeyId,
-           prompt: prompt,
-           dimensions: dimensions,
-           credits_used: 1,
-           success: success,
-           error_message: errorMessage
-         });
-       
-       if (error) {
-         console.error('Error logging image generation:', error);
-       }
-       
-       // Update API key usage stats
-       if (success && apiKeyId) {
-         await supabase
-           .from('api_keys')
-           .update({ 
-             total_requests: supabase.raw('total_requests + 1'),
-             last_used_at: new Date().toISOString()
-           })
-           .eq('id', apiKeyId);
-       }
-     }
+    // Log image generation (simplified to avoid database errors)
+    static async logImageGeneration(userId, apiKeyId, prompt, dimensions, success, errorMessage = null) {
+      if (!supabase) return;
+      
+      try {
+        // Simple logging without problematic columns
+        const { error } = await supabase
+          .from('image_generations')
+          .insert({
+            user_id: userId,
+            api_key_id: apiKeyId,
+            prompt: prompt,
+            dimensions: dimensions,
+            success: success,
+            error_message: errorMessage,
+            created_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error('Error logging image generation:', error);
+        }
+        
+        // Update API key usage stats (simplified)
+        if (success && apiKeyId) {
+          await supabase
+            .from('api_keys')
+            .update({ 
+              last_used_at: new Date().toISOString()
+            })
+            .eq('id', apiKeyId);
+        }
+      } catch (error) {
+        console.error('Error in logImageGeneration:', error);
+      }
+    }
      
      // Check if image/video is cached
      static async getCachedImage(prompt, dimensions, format, additionalSettings = '') {
@@ -462,7 +466,12 @@ async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
     console.log('✅ FAL AI Result:', result.data);
 
     if (result.data && result.data.images && result.data.images.length > 0) {
-      return result.data.images[0].url;
+      const falUrl = result.data.images[0].url;
+      // Extract image ID from FAL URL and create proxy URL
+      const imageId = falUrl.split('/').pop();
+      const proxyUrl = `/proxy/${imageId}`;
+      console.log(`🔄 Converting FAL URL to proxy URL: ${falUrl} → ${proxyUrl}`);
+      return proxyUrl;
     } else {
       throw new Error('No image URL returned from FAL AI');
     }
@@ -471,6 +480,62 @@ async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
     throw new Error('Failed to generate image with FAL AI');
   }
 }
+
+// Helper function to serve image directly
+async function serveImage(res, imageUrl) {
+  try {
+    console.log(`🖼️ Serving image: ${imageUrl}`);
+    
+    // If it's already a proxy URL, redirect to it
+    if (imageUrl.startsWith('/proxy/')) {
+      return res.redirect(imageUrl);
+    }
+    
+    // If it's a FAL.media URL, proxy it
+    if (imageUrl.includes('v3.fal.media')) {
+      const imageId = imageUrl.split('/').pop();
+      return res.redirect(`/proxy/${imageId}`);
+    }
+    
+    // For other URLs, redirect directly
+    return res.redirect(imageUrl);
+    
+  } catch (error) {
+    console.error('Error serving image:', error);
+    res.status(500).json({ error: 'Failed to serve image' });
+  }
+}
+
+// Image proxy endpoint - serves images from FAL.media through your domain
+app.get('/proxy/:imageId', async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    const imageUrl = `https://v3.fal.media/files/${imageId}`;
+    
+    console.log(`🖼️ Proxying image: ${imageUrl}`);
+    
+    // Fetch the image from FAL.media
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Set appropriate headers
+    res.set({
+      'Content-Type': response.headers.get('content-type') || 'image/png',
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*'
+    });
+    
+    // Stream the image data
+    response.body.pipe(res);
+    
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).json({ error: 'Failed to proxy image' });
+  }
+});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -934,7 +999,7 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
         }
       }
       
-      return res.redirect(cachedUrl);
+      return await serveImage(res, cachedUrl);
     }
     
     // 🚀 STEP 2: Check generation status (queuing system) - JavaScript queue
@@ -956,7 +1021,7 @@ app.get('/:width(\\d+)x:height(\\d+).:format(jpg|jpeg|png|webp)', async (req, re
         // Store in cache for future requests (JavaScript queue)
         imageQueue.storeCachedImage(prompt, dimensions, format, generationStatus.generatedUrl);
         
-        return res.redirect(generationStatus.generatedUrl);
+        return await serveImage(res, generationStatus.generatedUrl);
         
       case 'failed':
         console.log(`❌ Generation FAILED for prompt: "${prompt}"`);
@@ -999,7 +1064,7 @@ async function waitForGenerationCompletion(statusId, res) {
     
     if (status.status === 'completed') {
       console.log(`✅ Generation completed after ${waitTime}ms wait`);
-      return res.redirect(status.generatedUrl);
+      return await serveImage(res, status.generatedUrl);
     }
     
     if (status.status === 'failed') {
@@ -1056,7 +1121,7 @@ async function startGenerationProcess(statusId, prompt, dimensions, format, user
       }
     }
     
-    return res.redirect(generatedUrl);
+    return await serveImage(res, generatedUrl);
     
   } catch (error) {
     console.error('Error in generation process:', error);
