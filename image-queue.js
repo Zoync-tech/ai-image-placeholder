@@ -59,6 +59,12 @@ class InMemoryQueue {
   getGenerationStatusById(hash) {
     return this.generations.get(hash) || null;
   }
+  
+  clearCache() {
+    this.cache.clear();
+    this.generations.clear();
+    console.log('🧹 Cache cleared');
+  }
 }
 
 // Create global queue instance

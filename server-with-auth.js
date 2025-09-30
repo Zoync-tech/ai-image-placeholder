@@ -481,7 +481,7 @@ async function generateImageWithFAL(prompt, width = 1024, height = 1024) {
 // Helper function to serve image directly at the same URL
 async function serveImage(res, imageUrl) {
   try {
-    console.log(`🖼️ Serving image directly: ${imageUrl}`);
+    console.log(`🖼️ Serving image directly at original URL: ${imageUrl}`);
     
     let actualImageUrl = imageUrl;
     
@@ -510,7 +510,7 @@ async function serveImage(res, imageUrl) {
     const imageBuffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/png';
     
-    console.log(`✅ Serving image directly (${imageBuffer.byteLength} bytes, ${contentType})`);
+    console.log(`✅ Serving image directly at original URL (${imageBuffer.byteLength} bytes, ${contentType})`);
     
     // Set appropriate headers
     res.set({
@@ -520,7 +520,7 @@ async function serveImage(res, imageUrl) {
       'Content-Length': imageBuffer.byteLength
     });
     
-    // Send the image data directly
+    // Send the image data directly - NO REDIRECT
     res.send(Buffer.from(imageBuffer));
     
   } catch (error) {
@@ -557,6 +557,21 @@ app.get('/proxy/:imageId', async (req, res) => {
   } catch (error) {
     console.error('Error proxying image:', error);
     res.status(500).json({ error: 'Failed to proxy image' });
+  }
+});
+
+// Cache management endpoint
+app.get('/clear-cache', (req, res) => {
+  try {
+    imageQueue.clearCache();
+    res.json({ 
+      status: 'success', 
+      message: 'Cache cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+    res.status(500).json({ error: 'Failed to clear cache' });
   }
 });
 
